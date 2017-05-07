@@ -7,9 +7,10 @@ Verwaltung und schreiben von Daten einer Messstelle (=Stromzähler) in der Strom
 ## Verwendung
 ```
  stbo-mpo store meter_point_id value
- stbo-mpo retrieve BC_Meter_Point
- stbo-mpo setRoles meter_point_id
+ stbo-mpo retrieve meter_point_id
 ```
 
 meter_point_id = Zählernummer
-BC_Meter_Point = StromDAO Blockchain Adresse  
+
+Jeder Messtelle wird auf Basis der angegebenen Meter_Point_Id eine eindeutige Adresse in der StromDAO Energy Blockchain zugewiesen. Diese Zuordnung erfoglt durch automatische Generierung eines Schlüsselpaares, welches lokal gespeichert wird. 
+

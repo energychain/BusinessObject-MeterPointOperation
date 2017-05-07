@@ -1,5 +1,18 @@
-/*
- *
+/* StromDAO Business Object: MeterPoint Operation
+ * =========================================
+ * Meter Point Operator handling for StromDAO Energy Blockchain.
+ * 
+ * @author Thorsten Zoerner thorsten.zoerner@stromdao.de 
+ * 
+ * Usage: 
+ *    stbo-mpo store YOUR_METERPOINT_ID READING
+ *    stbo-mpo retrieve YOUR_METERPOINT_ID
+ * 
+ * This script will automatically assign a unique energy blockchain address for 
+ * your meterpoint. 
+ * 
+ * If used in StromDAO-BO's MAIN BRANCH this will be defaulted to the testnet environment.
+ * 
  */
  
 var StromDAOBO = require("stromdao-businessobject");    
@@ -12,16 +25,19 @@ var userArgs = process.argv.slice(2);
 if(userArgs.length<1) {
 	console.log("Usage:");
 	console.log(" stbo-mpo store meter_point_id value");	
-	console.log(" stbo-mpo retrieve BC_Meter_Point");
-	console.log(" stbo-mpo setRoles meter_point_id");	
+	console.log(" stbo-mpo retrieve meter_point_id");
 	process.exit(1);
 }
 
-var node = new StromDAOBO.Node({external_id:userArgs[1]c);
+var node = new StromDAOBO.Node({external_id:userArgs[1],testMode:true});
+console.log("Mapping",userArgs[1]," is ",node.wallet.address);
 	
 if(userArgs[0]=="store") {
- console.log("Mapping",userArgs[1]," is ",node.wallet.address);
- node.mpo(known_mpo).then( function(mpo) {
+	if(userArgs.length<3) {
+		console.log("ERR: Missing Reading");
+		process.exit(1);
+	}
+    node.mpo(known_mpo).then( function(mpo) {
 							mpo.storeReading(userArgs[2]).then( function(tx_result) {	
 									console.log("Tx",tx_result,userArgs[2]);
 							});
@@ -29,34 +45,8 @@ if(userArgs[0]=="store") {
 }	
 if(userArgs[0]=="retrieve") {
 	node.mpo(known_mpo).then( function(mpo) {
-							mpo.readings(userArgs[1]).then( function(tx_result) {	
-									console.log("Time",tx_result.time.toString());
-									console.log("Reading",tx_result.power.toString());
+							mpo.readings(node.wallet.address).then( function(tx_result) {	
+									console.log(tx_result.time.toString(),tx_result.power.toString());									
 							});
 						});
 }	
-if(userArgs[0]=="setRoles") {
-	    console.log("Mapping",userArgs[1]," is ",node.wallet.address);
-		node.roleLookup(known_rolelookup).then( function(roleLookup) {
-				roleLookup.setRelation('0x0ccE513Fc5581F636830D15ddA7eD211c211aa63',known_mpo).then( function(tx_result) {	
-						console.log("Role Tx",tx_result);
-						node.mpo(known_mpo).then( function(mpo) {
-								mpo.approveMP(node.wallet.address,4).then( function(tx_result) {	
-										console.log("MPO Tx",tx_result);
-											node.dso(known_dso).then( function(dso) {
-											dso.approveConnection(node.wallet.address,1000000).then( function(tx_result) {	
-													console.log("DSO Tx",tx_result);
-													node.roleLookup(known_rolelookup).then( function(roleLookup) {
-														roleLookup.setRelation('0x72467342DcC4b072AeDB2C4242D98504fa22b17A',known_dso).then( function(tx_result) {	
-															
-														});
-													});
-											});
-										});
-								});
-						});
-				});
-		});
-		
-
-}				
