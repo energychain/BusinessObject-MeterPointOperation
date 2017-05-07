@@ -1,0 +1,32 @@
+{
+  "name": "stromdao-bo-mpo",
+  "version": "0.0.1",
+  "description": "Operation of an Energy Meter Point using StromDAO Business Object for Energy Blockchain",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha --harmony "
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/energychain/BusinessObject-MeterPointOperation.git"
+  },
+  "keywords": [
+    "stromdao",
+    "energy",
+    "blockchain",
+    "power",
+    "electricity",
+    "decentralized",
+    "meterpoint",
+    "smartmeter"
+  ],
+  "author": "Thorsten Zoerner",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/energychain/BusinessObject-MeterPointOperation/issues"
+  },
+  "homepage": "https://github.com/energychain/BusinessObject-MeterPointOperation#readme",
+  "dependencies": {
+    "stromdao-businessobject": "^0.1.5"
+  }
+}
