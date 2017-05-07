@@ -28,3 +28,19 @@ Im BO-Messstellenbetrieb werden hierfür die Speicherdaten an die StromDAO Energ
 ```
 
 Die Abstraktion für den Netzbetrieb, den P2P Stromhandel (Austausch von Speicherkapazitäten) und alle anderen Marktkommunikationen werden über den Konsensmechanismus bereitgestellt.
+
+## Light-Server
+
+Mit Hilfe des Light-Server kann ein lokaler HTTP-Server verwendet werden, um direkt aus dem Browser die Messwerte zu übermitteln, oder diese zu senden. 
+
+```
+npm start
+```
+
+Nach dem Start ist der Server unter http://localhost:8000/ erreichbar.
+
+### HTTP Anfragen
+
+`http://localhost:8000/blockchain?address=0x6f8c627d20850a4C225292A9b1c1FBedBc05A62b`
+`http://localhost:8000/store?mpid=100&reading=1234`
+`http://localhost:8000/retrieve?mpid=100`
