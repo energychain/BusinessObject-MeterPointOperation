@@ -7,9 +7,10 @@
  * 
  */
 
-function storeReading(external_id,type,reading) {
+function storeReading(external_id,type,reading,mpo_dir_role) {
 	var p1 = new Promise(function(resolve, reject) {
 	var node = new StromDAOBO.Node({external_id:external_id+"-"+type,testMode:true});	
+	node.options.mpo_dir_role=mpo_dir_role;
 	console.log("Mapping",external_id+"-"+type," is ",node.wallet.address);
 	node.mpo().then( function(mpo) {							
 							mpo.storeReading(reading).then( function(tx_result) {	
@@ -49,10 +50,10 @@ client.get('cgi/info.js',function(err, res, body) {
 			  process.exit(2);
 		  }
 		  
-		  storeReading(device,"EGrid_AC_DC",EGrid_AC_DC)
-		  .then(storeReading(device,"EGrid_DC_AC",EGrid_DC_AC))
-		  .then(storeReading(device,"EWr_AC_DC",EWr_AC_DC))
-		  .then(storeReading(device,"EWr_DC_AC",EWr_DC_AC));
+		  storeReading(device,"EGrid_AC_DC",EGrid_AC_DC,4)
+		  .then(storeReading(device,"EGrid_DC_AC",EGrid_DC_AC,5))
+		  .then(storeReading(device,"EWr_AC_DC",EWr_AC_DC,4))
+		  .then(storeReading(device,"EWr_DC_AC",EWr_DC_AC,5));
 		  return;
 	});
 	return;

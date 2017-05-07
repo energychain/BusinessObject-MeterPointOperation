@@ -23,6 +23,7 @@ if(userArgs.length<1) {
 	console.log("Usage:");
 	console.log(" stbo-mpo store meter_point_id value");	
 	console.log(" stbo-mpo retrieve meter_point_id");
+	console.log(" stbo-mpo blockchain blockchain_address");
 	process.exit(1);
 }
 
@@ -43,6 +44,13 @@ if(userArgs[0]=="store") {
 if(userArgs[0]=="retrieve") {
 	node.mpo().then( function(mpo) {
 							mpo.readings(node.wallet.address).then( function(tx_result) {	
+									console.log(tx_result.time.toString(),tx_result.power.toString());									
+							});
+						});
+}	
+if(userArgs[0]=="blockchain") {
+	node.mpo().then( function(mpo) {
+							mpo.readings(userArgs[1]).then( function(tx_result) {	
 									console.log(tx_result.time.toString(),tx_result.power.toString());									
 							});
 						});
