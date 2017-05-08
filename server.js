@@ -67,12 +67,13 @@ server.route({
 				return reply(res);
 		} else 
 		{
-			var node = new StromDAOBO.Node({external_id:request.query.mpid,testMode:true});
+			var node = new StromDAOBO.Node({external_id:"1337",testMode:true});
 			node.mpo().then( function(mpo) {
 							mpo.readings(request.query.address).then( function(tx_result) {	
 									res.time=(tx_result.time.toString()*1);
 									res.reading=(tx_result.power.toString()*1);
-									res.address=request.query.address;								
+									res.address=request.query.address;	
+									return reply(res);							
 							});
 						});
 		}		 
