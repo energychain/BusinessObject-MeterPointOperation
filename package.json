@@ -32,6 +32,7 @@
   "homepage": "https://github.com/energychain/BusinessObject-MeterPointOperation#readme",
   "dependencies": {
     "hapi": "^16.1.1",
+    "inert": "^4.2.0",
     "request-json": "^0.6.2",
     "stromdao-businessobject": "^0.1.6"
   }

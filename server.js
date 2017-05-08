@@ -79,6 +79,25 @@ server.route({
 		}		 
     }
 });
+
+server.register(require('inert'), (err) => {
+
+    if (err) {
+        throw err;
+    }
+
+	server.route({
+		method: 'GET',
+		path: '/{param*}',
+		handler: {
+			directory: {
+				path: 'static/'
+			}
+		}
+	});
+
+	
+});
 server.start((err) => {
 
     if (err) {

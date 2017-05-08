@@ -1,0 +1,66 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">    
+    <title>DEMO: StromDAO/Business Object/MeterPoint</title>
+
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+  </head>
+  <body>
+	<div class="container">
+    <h1>/blockchain</h1>
+	<div class="row">
+		<div class="col-md-6">
+			<h2>Eingabe</h2>
+			<div class="form-group">		
+				<label for="txt_address">Blockchain Adresse:</label><br/>
+				<input type="text" id="txt_address" name="txt_address" class="form-control"><br/>
+				<button id="btn_store" class="btn btn-default">/blockchain</button>
+			</div>
+		</div>
+		<div class="col-md-6">
+			<h2>Ausgabe</h2>
+			<div class="panel panel-default">
+			  <div class="panel-body" id="store_output">
+				
+			  </div>
+			</div>
+		</div>
+	</div>
+	</div>
+	
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="js/jquery-3.2.1.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="js/bootstrap.min.js"></script>
+	
+	<script>
+	function updateTxt(el,txt) {
+		$(el).html("<pre>"+txt+"</pre>");
+	}
+	$('#btn_store').click(
+			function() {
+				var txt="";
+				updateTxt('#store_output',txt);
+				
+				var url = "/blockchain?address="+$('#txt_address').val();
+				txt+="Sende:\n"+url+"\n\n";
+				updateTxt('#store_output',txt);
+				$.getJSON(url,function(data) {
+				
+						txt+="Empfange:\n";
+						txt+="- Zeit:"+data.time+"\n";
+						txt+="- Ablesung:"+data.reading+"\n";						
+						//txt+=JSON.stringify(data);
+				
+						updateTxt('#store_output',txt);
+						console.log(data);
+				});
+				
+			}
+	);
+	</script>
+  </body>
+</html>
