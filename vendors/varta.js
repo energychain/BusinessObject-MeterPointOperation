@@ -9,19 +9,18 @@
 
 function storeReading(external_id,type,reading,mpo_dir_role) {
 	var p1 = new Promise(function(resolve, reject) {
-	var node = new StromDAOBO.Node({external_id:external_id+"-"+type,testMode:true});	
-	node.options.mpo_dir_role=mpo_dir_role;
-	console.log("Mapping",external_id+"-"+type," is ",node.wallet.address);
-	node.mpo().then( function(mpo) {							
-							mpo.storeReading(reading).then( function(tx_result) {	
-									resolve(tx_result);
-							});
-	});
+		var node = new StromDAONode.Node({external_id:external_id+"-"+type,testMode:true});
+		console.log("Mapping",external_id+"-"+type," is ",node.wallet.address);		
+		node.mpr().then( function(mpr) {							
+								mpr.storeReading(reading).then( function(tx_result) {	
+										resolve(tx_result);
+								});
+		});
 	});
 	return p1;
 }
 
-var StromDAOBO = require("stromdao-businessobject");    
+var StromDAONode = require("stromdao-businessobject");    
 
 var userArgs = process.argv.slice(2);
 
