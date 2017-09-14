@@ -33,7 +33,8 @@ vorpal
   .option('-f <file>','Apply settlement/clearing from file')
   .option('--de <zipcode>','Add tarif for zipcode (Germany)')
   .action(function (args, callback) {	 
-	var node = new StromDAOBO.Node({extid:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
+	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
+	node.storage.setItemSync(node.wallet.address,args.meter_point_id);
 	node.mpr().then( function(mpo) {
 			global.settlement={};
 			global.node=node;
@@ -73,7 +74,8 @@ vorpal
   .command('retrieve <meter_point_id>')    
   .description("Retrieves Meter Point Reading for given external Meter Point ID.") 
   .action(function (args, callback) {	 
-	var node = new StromDAOBO.Node({extid:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
+	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
+	node.storage.setItemSync(node.wallet.address,args.meter_point_id);
 	node.mpr().then( function(mpo) {
 			mpo.readings(node.wallet.address).then( function(tx_result) {								
 				vorpal.log("Time:",new Date(tx_result.time.toString()*1000).toLocaleString());
@@ -83,6 +85,38 @@ vorpal
 	});	
 });	
 
+
+vorpal
+  .command('ledger <meter_point_id>')    
+  .description("Retrieve Ledger Information for meter point id (Stromkonto).") 
+  .action(function (args, callback) {	 
+	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
+	node.storage.setItemSync(node.wallet.address,args.meter_point_id);	
+	node.stromkonto().then( function(sko) {
+			vorpal.log("Address:",node.wallet.address);
+			sko.balancesSoll(node.wallet.address).then(function(soll) {
+				vorpal.log("Credit:",soll);
+				sko.balancesHaben(node.wallet.address).then(function(haben) {
+					vorpal.log("Debit:",haben);
+					vorpal.log("Balance:",haben-soll);					
+					sko.history(node.wallet.address,10000).then(function(history) {
+						vorpal.log("Last Transaction");
+						vorpal.log("Block","From","To","Value");						
+						for(var i=0;i<history.length;i++) {
+								var from=node.storage.getItemSync(history[i].from);
+								if(from==null) {from=history[i].from;}
+								
+								var to=node.storage.getItemSync(history[i].to);
+								if(to==null) {to=history[i].from;}
+								
+								vorpal.log(history[i].blockNumber,from,to,parseInt(history[i].value, 16));							
+						}
+						callback();	
+					});
+				});
+			});
+	});	
+});	
 
 if (interactive) {
     vorpal
@@ -98,39 +132,3 @@ if (interactive) {
 }
 
 
-/*
-var userArgs = process.argv.slice(2);
-
-if(userArgs.length<1) {
-	console.log("Usage:");
-	console.log(" stbo-mpo store meter_point_id value");	
-	console.log(" stbo-mpo retrieve meter_point_id");
-	console.log(" stbo-mpo blockchain blockchain_address");
-	process.exit(1);
-}
-
-var node = new StromDAOBO.Node({external_id:userArgs[1],testMode:true});
-console.log("Mapping",userArgs[1]," is ",node.wallet.address);
-	
-if(userArgs[0]=="store") {
-	if(userArgs.length<3) {
-		console.log("ERR: Missing Reading");
-		process.exit(1);
-	}
-    
-}	
-if(userArgs[0]=="retrieve") {
-	node.mpo().then( function(mpo) {
-							mpo.readings(node.wallet.address).then( function(tx_result) {	
-									console.log(tx_result.time.toString(),tx_result.power.toString());									
-							});
-						});
-}	
-if(userArgs[0]=="blockchain") {
-	node.mpo().then( function(mpo) {
-							mpo.readings(userArgs[1]).then( function(tx_result) {	
-									console.log(tx_result.time.toString(),tx_result.power.toString());									
-							});
-						});
-}	
-*/
