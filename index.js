@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 
 const vorpal = require('vorpal')();
+var srequest = require('sync-request');
+const fs = require('fs');
+const vm = require('vm');
 var interactive = vorpal.parse(process.argv, {use: 'minimist'})._ === undefined;
 
 /* StromDAO Business Object: MeterPoint Operation
@@ -26,12 +29,38 @@ var StromDAOBO = require("stromdao-businessobject");
 vorpal
   .command('store <meter_point_id> <reading>')    
   .description("Stores Meter Point Reading for given external Meter Point ID.") 
+  .option('-a <ipfs_hash>','Apply settlement/clearing from IPFS Hash')
+  .option('-f <file>','Apply settlement/clearing from file')
   .action(function (args, callback) {	 
 	var node = new StromDAOBO.Node({extid:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
 	node.mpr().then( function(mpo) {
-			mpo.storeReading(args.reading).then( function(tx_result) {	
-					vorpal.log("TX:",tx_result);
-					callback();
+			global.settlement={};
+			global.node=node;
+			var settlement_js="";
+			if(typeof args.options.a != "undefined") {
+				settlement_js = srequest('GET',"https://fury.network/ipfs/"+args.options.a+"").body.toString();				
+			}
+			if(typeof args.options.f != "undefined") {
+				settlement_js = fs.readFileSync( args.options.f);
+			}
+			settlement.account=node.wallet.address;
+			settlement.node_account=node.nodeWallet.address;
+			
+			mpo.readings(node.wallet.address).then( function(start_reading) {
+				settlement.start=start_reading;								
+				mpo.storeReading(args.reading).then( function(tx_result) {	
+					if(settlement_js.length>0) {
+						mpo.readings(node.wallet.address).then( function(end_reading) {
+							settlement.end=end_reading;
+							var script = new vm.Script(settlement_js);
+							script.runInThisContext();						
+							callback();
+						});
+					} else {
+						vorpal.log("TX:",tx_result);																	
+						callback();
+					}
+				});
 			});
 	});	
 });	

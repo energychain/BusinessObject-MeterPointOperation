@@ -1,6 +1,6 @@
 {
   "name": "stromdao-bo-mpo",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "engines": {
     "node": ">=7.6.0",
     "npm": ">=4.5.0"
@@ -24,7 +24,7 @@
     "meterpoint",
     "smartmeter"
   ],
-   "bin": {
+  "bin": {
     "stromdao-mp": "./index.js",
     "stromdao.mp": "./index.js"
   },
@@ -39,6 +39,7 @@
     "inert": "^4.2.0",
     "request-json": "^0.6.2",
     "stromdao-businessobject": "^0.4.0",
+    "sync-request": "^4.1.0",
     "vorpal": "^1.12.0"
   }
 }
