@@ -31,6 +31,7 @@ vorpal
   .description("Stores Meter Point Reading for given external Meter Point ID.") 
   .option('-a <ipfs_hash>','Apply settlement/clearing from IPFS Hash')
   .option('-f <file>','Apply settlement/clearing from file')
+  .option('--de <zipcode>','Add tarif for zipcode (Germany)')
   .action(function (args, callback) {	 
 	var node = new StromDAOBO.Node({extid:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
 	node.mpr().then( function(mpo) {
@@ -42,6 +43,9 @@ vorpal
 			}
 			if(typeof args.options.f != "undefined") {
 				settlement_js = fs.readFileSync( args.options.f);
+			}
+			if(typeof args.options.de != "undefined") {
+				settlement.tarif = JSON.parse(srequest('GET',"https://fury.network/tarifs/de/"+args.options.de+"").body.toString());				
 			}
 			settlement.account=node.wallet.address;
 			settlement.node_account=node.nodeWallet.address;
