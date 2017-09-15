@@ -46,7 +46,19 @@ vorpal
 				settlement_js = fs.readFileSync( args.options.f);
 			}
 			if(typeof args.options.de != "undefined") {
-				settlement.tarif = JSON.parse(srequest('GET',"https://fury.network/tarifs/de/"+args.options.de+"").body.toString());				
+				settlement.tarif = JSON.parse(srequest('GET',"https://fury.network/tarifs/de/"+args.options.de+"").body.toString());	
+				var BpGross=0;
+				var UpGross=0;
+				var cost=0;
+
+				for (var k in settlement.tarif){
+					if (settlement.tarif.hasOwnProperty(k)) {		
+						BpGross	=settlement.tarif[k].BpGross*10000000;
+						UpGross=settlement.tarif[k].UpGross*100000;		
+					}
+				}	
+				settlement.BpGross=BpGross;
+				settlement.UpGross=UpGross;		
 			}
 			settlement.account=node.wallet.address;
 			settlement.node_account=node.nodeWallet.address;
