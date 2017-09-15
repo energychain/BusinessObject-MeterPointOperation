@@ -119,6 +119,18 @@ vorpal
 			});			
 	});	
 });	
+vorpal
+  .command('credit <meter_point_id> <amount>')    
+  .description("Add credit to Meter Point ledger.") 
+  .action(function (args, callback) {	 
+	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
+	node.storage.setItemSync(node.wallet.address,args.meter_point_id);
+	node.stromkontoproxy("0x19BF166624F485f191d82900a5B7bc22Be569895").then(function(sko) {
+			sko.addTx(node.nodeWallet.address,node.wallet.address,args.amount,0).then(function(tx) {
+				callback();
+			});
+	});
+});	
 
 
 vorpal
