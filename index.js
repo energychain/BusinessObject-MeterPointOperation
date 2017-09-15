@@ -32,6 +32,7 @@ vorpal
   .option('-a <ipfs_hash>','Apply settlement/clearing from IPFS Hash')
   .option('-f <file>','Apply settlement/clearing from file')
   .option('--de <zipcode>','Add tarif for zipcode (Germany)')
+  .option('--auto <zipcode>','Auto settle to dev/testing ledger (only Germany)')
   .action(function (args, callback) {	 
 	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
 	node.storage.setItemSync(node.wallet.address,args.meter_point_id);
@@ -39,6 +40,13 @@ vorpal
 			global.settlement={};
 			global.node=node;
 			var settlement_js="";
+			var BpGross=0;
+			var UpGross=0;
+			var cost=0;
+			if(typeof args.options.auto != "undefined") {
+					args.options.a="QmQZ3v3Q9T99oXjmuaUkcceE3sRFDWdwU59pCS32qADFYA";
+					args.options.de=args.options.auto;	
+			}
 			if(typeof args.options.a != "undefined") {
 				settlement_js = srequest('GET',"https://fury.network/ipfs/"+args.options.a+"").body.toString();				
 			}
@@ -47,9 +55,7 @@ vorpal
 			}
 			if(typeof args.options.de != "undefined") {
 				settlement.tarif = JSON.parse(srequest('GET',"https://fury.network/tarifs/de/"+args.options.de+"").body.toString());	
-				var BpGross=0;
-				var UpGross=0;
-				var cost=0;
+
 
 				for (var k in settlement.tarif){
 					if (settlement.tarif.hasOwnProperty(k)) {		
@@ -59,6 +65,8 @@ vorpal
 				}	
 				settlement.BpGross=BpGross;
 				settlement.UpGross=UpGross;		
+				
+				
 			}
 			settlement.account=node.wallet.address;
 			settlement.node_account=node.nodeWallet.address;
@@ -66,12 +74,27 @@ vorpal
 			mpo.readings(node.wallet.address).then( function(start_reading) {
 				settlement.start=start_reading;								
 				mpo.storeReading(args.reading).then( function(tx_result) {	
-					if(settlement_js.length>0) {
+					if((settlement_js.length>0)&&(settlement.start.power>0)) {
 						mpo.readings(node.wallet.address).then( function(end_reading) {
 							settlement.end=end_reading;
+							var cost=0;
+							var kwh=(settlement.end.power-settlement.start.power)/1000;
+							cost+=Math.round(kwh*UpGross);
+							
+							var time=(settlement.end.time-settlement.start.time)/(365*86400);
+							cost+=Math.round(time*BpGross);
+							settlement.cost=cost;
+							settlement.base=(settlement.end.power.toString()*1-settlement.start.power.toString()*1);
 							var script = new vm.Script(settlement_js);
-							script.runInThisContext();						
-							callback();
+							var result=script.runInThisContext();	
+							if(typeof global.promise!="undefined") { 
+									global.promise.then(function(tx) {
+										console.log(tx);
+										callback();		
+									});
+							} else {
+									callback();
+							}												
 						});
 					} else {
 						vorpal.log("TX:",tx_result);																	
