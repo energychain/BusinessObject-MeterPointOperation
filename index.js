@@ -120,6 +120,25 @@ vorpal
 	});	
 });	
 vorpal
+  .command('account <meter_point_id>')    
+  .description("Get Address an keys for given external Meter Point ID.") 
+  .option('--import <privateKey>','Import private Key as Meter Point. Add PKI infront of key!')
+  .action(function (args, callback) {	 
+	if(typeof args.options.import != "undefined") {
+		console.log(args.options.import);
+		var node = new StromDAOBO.Node({external_id:args.meter_point_id,privateKey:args.options.import.substr(3),testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
+	} else {
+		var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
+	}
+	vorpal.log("MPID",args.meter_point_id);
+	vorpal.log("Address",node.wallet.address);
+	vorpal.log("Node",node.nodeWallet.address);
+	vorpal.log("Private Key","PKI"+node.wallet.privateKey);
+	vorpal.log("RSA Public Key",node.RSAPublicKey);
+	vorpal.log("RSA Private Key",node.RSAPrivateKey);
+	callback();
+});
+vorpal
   .command('credit <meter_point_id> <amount>')    
   .description("Add credit to Meter Point ledger.") 
   .action(function (args, callback) {	 
@@ -131,8 +150,6 @@ vorpal
 			});
 	});
 });	
-
-
 vorpal
   .command('ledger <meter_point_id>')    
   .description("Retrieve Ledger Information for meter point id (Stromkonto).") 
