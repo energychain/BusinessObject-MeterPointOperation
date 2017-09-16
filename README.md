@@ -33,6 +33,10 @@ stromdao-mp store -f settlement_sample.js --de 69256 1337 100
 
 ```
 
+## Anwendungsbeispiele
+http://docs.stromdao.de/presentations/20170922/
+
+
 ## Feedback/Collaboration
 - https://fury.network/
 - https://stromdao.de/

@@ -61,6 +61,7 @@ vorpal
 					if (settlement.tarif.hasOwnProperty(k)) {		
 						BpGross	=settlement.tarif[k].BpGross*10000000;
 						UpGross=settlement.tarif[k].UpGross*100000;		
+						settlement.zipcode=settlement.tarif[k].Zipcode;
 					}
 				}	
 				settlement.BpGross=BpGross;
