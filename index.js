@@ -99,6 +99,8 @@ function cmd_store(args, callback) {
 	});	
 }	
 
+
+	
 vorpal
   .command('store <meter_point_id> <reading>')    
   .description("Stores Meter Point Reading for given external Meter Point ID.") 
@@ -108,10 +110,7 @@ vorpal
   .option('--auto <zipcode>','Auto settle to dev/testing ledger (only Germany)')
   .action(cmd_store);	
 
-vorpal
-  .command('retrieve <meter_point_id>')    
-  .description("Retrieves Meter Point Reading for given external Meter Point ID.") 
-  .action(function (args, callback) {	 
+function cmd_retrieve(args, callback) {	 
 	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
 	node.storage.setItemSync(node.wallet.address,args.meter_point_id);
 	node.mpr().then( function(mpo) {
@@ -121,17 +120,24 @@ vorpal
 				callback();									
 			});			
 	});	
-});	
+}
+
+vorpal
+  .command('retrieve <meter_point_id>')    
+  .description("Retrieves Meter Point Reading for given external Meter Point ID.") 
+  .action(cmd_retrieve);
+  
 vorpal
   .command('account <meter_point_id>')    
   .description("Get Address an keys for given external Meter Point ID.") 
   .option('--import <privateKey>','Import private Key as Meter Point. Add PKI infront of key!')
   .action(function (args, callback) {	 
+	var node={};
 	if(typeof args.options.import != "undefined") {
 		console.log(args.options.import);
-		var node = new StromDAOBO.Node({external_id:args.meter_point_id,privateKey:args.options.import.substr(3),testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
+		node = new StromDAOBO.Node({external_id:args.meter_point_id,privateKey:args.options.import.substr(3),testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
 	} else {
-		var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
+		node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
 	}
 	vorpal.log("MPID",args.meter_point_id);
 	vorpal.log("Address",node.wallet.address);
@@ -171,10 +177,10 @@ vorpal
 						vorpal.log("Block","From","To","Value");						
 						for(var i=0;i<history.length;i++) {
 								var from=node.storage.getItemSync(history[i].from);
-								if(from==null) {from=history[i].from;}
+								if(from===null) {from=history[i].from;}
 								
 								var to=node.storage.getItemSync(history[i].to);
-								if(to==null) {to=history[i].from;}
+								if(to===null) {to=history[i].from;}
 								
 								vorpal.log(history[i].blockNumber,from,to,parseInt(history[i].value, 16));							
 						}
@@ -199,7 +205,7 @@ vorpal
 		method: 'GET',
 		path:'/store/', 
 		handler: function (request, reply) {
-			var res={}
+			var res={};
 			if(typeof request.query.meter_point_id == "undefined") {
 					res.err="Missing GET parameter: meter_point_id";
 					return reply(res);
@@ -216,6 +222,23 @@ vorpal
 			}		 
 		}
 	});
+	server.route({
+		method: 'GET',
+		path:'/retrieve/', 
+		handler: function (request, reply) {
+			var res={}
+			if(typeof request.query.meter_point_id == "undefined") {
+					res.err="Missing GET parameter: meter_point_id";
+					return reply(res);
+			} else {
+				args={};
+				args.meter_point_id=request.query.meter_point_id;				
+				args.options=request.query;
+				
+				return cmd_retrieve(args,function() {reply("transmitted");});
+			}		 
+		}
+	});	
 
 
 	server.register(require('inert'), (err) => {
@@ -251,14 +274,14 @@ vorpal
 if (interactive) {
     vorpal
         .delimiter('stromdao-mp $')
-        .show()
+        .show();
 } else {
     // argv is mutated by the first call to parse.
-    process.argv.unshift('')
-    process.argv.unshift('')
+    process.argv.unshift('');
+    process.argv.unshift('');
     vorpal
         .delimiter('')
-        .parse(process.argv)
+        .parse(process.argv);
 }
 
 

@@ -1,6 +1,6 @@
 {
   "name": "stromdao-bo-mpo",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "engines": {
     "node": ">=7.6.0",
     "npm": ">=4.5.0"
@@ -41,5 +41,8 @@
     "stromdao-businessobject": "^0.4.0",
     "sync-request": "^4.1.0",
     "vorpal": "^1.12.0"
+  },
+  "devDependencies": {
+    "bithound": "^1.7.0"
   }
 }
