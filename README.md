@@ -1,6 +1,11 @@
 # StromDAO-BusinessObject - Messstellenbetrieb
 
-Verwaltung und schreiben von Daten einer Messstelle (=Stromzähler) in der StromDAO Energy Blockchain. 
+[![bitHound Overall Score](https://www.bithound.io/github/energychain/BusinessObject-MeterPointOperation/badges/score.svg)](https://www.bithound.io/github/energychain/BusinessObject-MeterPointOperation)
+[![bitHound Dependencies](https://www.bithound.io/github/energychain/BusinessObject-MeterPointOperation/badges/dependencies.svg)](https://www.bithound.io/github/energychain/BusinessObject-MeterPointOperation/master/dependencies/npm)
+[![bitHound Code](https://www.bithound.io/github/energychain/BusinessObject-MeterPointOperation/badges/code.svg)](https://www.bithound.io/github/energychain/BusinessObject-MeterPointOperation)
+
+
+Verwaltung und Schreiben von Daten einer Messstelle (=Stromzähler) in der StromDAO Energy Blockchain. 
 
 ## Installation
 ```
