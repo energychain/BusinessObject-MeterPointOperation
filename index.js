@@ -5,6 +5,7 @@ var srequest = require('sync-request');
 const fs = require('fs');
 const vm = require('vm');
 var interactive = vorpal.parse(process.argv, {use: 'minimist'})._ === undefined;
+const Hapi = require('hapi');
 
 /* StromDAO Business Object: MeterPoint Operation
  * =========================================
@@ -25,15 +26,7 @@ var interactive = vorpal.parse(process.argv, {use: 'minimist'})._ === undefined;
  
 var StromDAOBO = require("stromdao-businessobject");    
 
-
-vorpal
-  .command('store <meter_point_id> <reading>')    
-  .description("Stores Meter Point Reading for given external Meter Point ID.") 
-  .option('-a <ipfs_hash>','Apply settlement/clearing from IPFS Hash')
-  .option('-f <file>','Apply settlement/clearing from file')
-  .option('--de <zipcode>','Add tarif for zipcode (Germany)')
-  .option('--auto <zipcode>','Auto settle to dev/testing ledger (only Germany)')
-  .action(function (args, callback) {	 
+function cmd_store(args, callback) {	 
 	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
 	node.storage.setItemSync(node.wallet.address,args.meter_point_id);
 	node.mpr().then( function(mpo) {
@@ -104,7 +97,16 @@ vorpal
 				});
 			});
 	});	
-});	
+}	
+
+vorpal
+  .command('store <meter_point_id> <reading>')    
+  .description("Stores Meter Point Reading for given external Meter Point ID.") 
+  .option('-a <ipfs_hash>','Apply settlement/clearing from IPFS Hash')
+  .option('-f <file>','Apply settlement/clearing from file')
+  .option('--de <zipcode>','Add tarif for zipcode (Germany)')
+  .option('--auto <zipcode>','Auto settle to dev/testing ledger (only Germany)')
+  .action(cmd_store);	
 
 vorpal
   .command('retrieve <meter_point_id>')    
@@ -182,6 +184,69 @@ vorpal
 			});
 	});	
 });	
+vorpal
+  .command('httpservice')    
+  .description("Start Lacy Webservice") 
+  .action(function (args, callback) {	 
+	
+	const server = new Hapi.Server();
+	server.connection({ 
+		host: 'localhost', 
+		port: 8000 
+	});
+
+	server.route({
+		method: 'GET',
+		path:'/store/', 
+		handler: function (request, reply) {
+			var res={}
+			if(typeof request.query.meter_point_id == "undefined") {
+					res.err="Missing GET parameter: meter_point_id";
+					return reply(res);
+			} else if(typeof request.query.reading == "undefined") {
+					res.err="Missing GET parameter: reading";
+					return reply(res);
+			} else {
+				args={};
+				args.meter_point_id=request.query.meter_point_id;
+				args.reading=request.query.reading;
+				args.options=request.query;
+				
+				return cmd_store(args,function() {reply("transmitted");});
+			}		 
+		}
+	});
+
+
+	server.register(require('inert'), (err) => {
+
+		if (err) {
+			throw err;
+		}
+
+		server.route({
+			method: 'GET',
+			path: '/{param*}',
+			handler: {
+				directory: {
+					path: 'static/'
+				}
+			}
+		});
+
+		
+	});
+	server.start((err) => {
+
+		if (err) {
+			throw err;
+		}
+		console.log(`Server running at: ${server.info.uri}`);
+		//callback();
+	});
+	
+});	
+
 
 if (interactive) {
     vorpal

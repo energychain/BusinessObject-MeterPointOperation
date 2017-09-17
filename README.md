@@ -31,7 +31,20 @@ stromdao-mp store -a QmRroaKpLVJyLBWAAAjHzBEAEfQthj8ZrcRSpYyQe7uRyM 1337 100
 # Setzen des Zählerstandes 100 für die Zählerkennung 1337 mit Verwendung eines Settlements via File basiertem Settlement und Tarifinfo für PLZ 69256
 stromdao-mp store -f settlement_sample.js --de 69256 1337 100
 
+# Starten eines einfachen Webservices zur SmartHome Integration (Port 8000)
+stromdao-mp httpservice
+
 ```
+
+## Webservice
+Der Webservice ist für die einfache Integration mit einer Heimautomatisierung oder im Sandbox Betrieb eines Smart-Meter-Gateway gedacht. Der Service ist auf Localhost gebunden und sollte **nicht** im Netzwerk freigeben werden. 
+
+Nutzung:
+```
+http://localhost:8000/store/?meter_point_id=1337&reading=1001&auto=69256
+```
+
+Die Request Parameter entsprechen dem Store Befehl.
 
 ## Anwendungsbeispiele
 http://docs.stromdao.de/presentations/20170922/
