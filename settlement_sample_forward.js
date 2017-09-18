@@ -1,7 +1,5 @@
-var sko_sc="0x19BF166624F485f191d82900a5B7bc22Be569895";
-
 global.promise = new Promise(function(resolve2, reject2) { 
-	node.stromkontoproxy("0x19BF166624F485f191d82900a5B7bc22Be569895").then(function(sko) {
+	node.stromkontoproxy(global.smart_contract_stromkonto).then(function(sko) {
 			sko.addTx(node.wallet.address,node.nodeWallet.address,settlement.cost,settlement.base).then(function(tx) {
 					console.log("TX",tx);		
 					console.log("From:",node.wallet.address);

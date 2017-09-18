@@ -6,6 +6,7 @@ const fs = require('fs');
 const vm = require('vm');
 var interactive = vorpal.parse(process.argv, {use: 'minimist'})._ === undefined;
 const Hapi = require('hapi');
+global.smart_contract_stromkonto="0x19BF166624F485f191d82900a5B7bc22Be569895";
 
 /* StromDAO Business Object: MeterPoint Operation
  * =========================================
@@ -23,8 +24,11 @@ const Hapi = require('hapi');
  * If used in StromDAO-BO's MAIN BRANCH this will be defaulted to the testnet environment.
  * 
  */
+
+require('dotenv').config();
  
 var StromDAOBO = require("stromdao-businessobject");    
+
 
 function cmd_store(args, callback) {	 
 	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
@@ -153,7 +157,7 @@ vorpal
   .action(function (args, callback) {	 
 	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
 	node.storage.setItemSync(node.wallet.address,args.meter_point_id);
-	node.stromkontoproxy("0x19BF166624F485f191d82900a5B7bc22Be569895").then(function(sko) {
+	node.stromkontoproxy(smart_contract_stromkonto).then(function(sko) {
 			sko.addTx(node.nodeWallet.address,node.wallet.address,args.amount,0).then(function(tx) {
 				callback();
 			});
@@ -165,7 +169,7 @@ vorpal
   .action(function (args, callback) {	 
 	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
 	node.storage.setItemSync(node.wallet.address,args.meter_point_id);	
-	node.stromkonto().then( function(sko) {
+	node.stromkonto(smart_contract_stromkonto).then( function(sko) {
 			vorpal.log("Address:",node.wallet.address);
 			sko.balancesSoll(node.wallet.address).then(function(soll) {
 				vorpal.log("Credit:",soll);
@@ -270,7 +274,9 @@ vorpal
 	
 });	
 
-
+if(typeof process.env.smart_contract_stromkonto !="undefined") {	
+		global.smart_contract_stromkonto=process.env.smart_contract_stromkonto;
+}
 if (interactive) {
     vorpal
         .delimiter('stromdao-mp $')

@@ -58,4 +58,4 @@ http://docs.stromdao.de/presentations/20170922/
 ## Feedback/Collaboration
 - https://fury.network/
 - https://stromdao.de/
-- hhttps://gitter.im/stromdao/BusinessObject
+- https://gitter.im/stromdao/BusinessObject
