@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head> 
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">    
+    <title>StromDAO/Business Object - Showcase</title>	
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">    
+     <style>
+    h3 {
+			color:#909090;
+	}
+    </style>
+  </head>
+  <body>
+	<nav class="navbar navbar-default">
+		<div class="navbar-left">
+			<span class="navbar-brand">
+		  <span class="glyphicon glyphicon-user"></span>&nbsp;<span class="account"></span>
+		  </span>
+		</div>
+	</nav>
+	<div class="container">	
+		<h1>Stromkonto</h1>
+		<div class="panel panel-default">
+					<div class="panel-heading">Konto</div>
+					<div class="panel-body">
+						 <div class="form-group">
+								 <label for="account">Nummer/Account</label>
+								<input type="text" class="form-control" id="account">
+								<button id="open_account" class="btn btn-primary" style="margin:5px;">Öffnen</button>
+						</div>
+						<div id="sko_blance" style="display:none">
+								<h2>Messstelle</h2>
+								<table class="table table-condensed" id="resultTable">
+									<tr><td>Ablesung</td><td id="ts"></td></tr>
+									<tr><td>Zählerstand</td><td id="power"></td></tr>
+								</table>
+								<h2>Abrechnung</h2>
+								<table class="table table-striped">
+								<tr><th>Soll</th><th>Haben</th><th>Saldo</th></tr>
+								<tr><td><span id="account_soll"></span></td><td><span id="account_haben"></span></td><td><span id="account_saldo"></span></td></tr>
+								</table>
+								
+								<div id="history"></div>
+						</div>
+					</div>
+		</div> 	
+	</div>  
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>        
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+	<script src="https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/dist/loader.js"></script>
+	<script src="./base.js"></script>
+  </body>
+</html>

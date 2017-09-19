@@ -77,8 +77,20 @@
         "configs": {
             "@inited": true,
             "json()": {
+                "Fury": {
+                    "command": "fury",
+                    "name": "Fury",
+                    "runner": "Shell command",
+                    "toolbar": true
+                },
+                "STROMDAO-BO-MPO": {
+                    "command": "stromdao-mp",
+                    "name": "STROMDAO-BO-MPO",
+                    "runner": "Shell command",
+                    "toolbar": true
+                },
                 "WebServer": {
-                    "command": "",
+                    "command": "index.html",
                     "debug": false,
                     "default": true,
                     "name": "WebServer",
