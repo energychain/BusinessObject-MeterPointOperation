@@ -54,6 +54,10 @@ Die Request Parameter entsprechen dem Store Befehl.
 ## Anwendungsbeispiele
 http://docs.stromdao.de/presentations/20170922/
 
+Nützlich für den Einstieg in das Business Objekt:
+https://demo.stromdao.de/introspect.html
+
+
 
 ## Feedback/Collaboration
 - https://fury.network/
