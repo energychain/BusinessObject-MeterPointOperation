@@ -126,6 +126,82 @@ function cmd_retrieve(args, callback) {
 	});	
 }
 
+function delegates_balancing(args,callback,sko,node) {
+	vorpal.log("Balancing Group",sko);
+	if(typeof args.options.allow != "undefined") {			
+		node.stromkontoproxy(sko).then(function(skp) {
+			skp.modifySender(args.options.allow,true).then(function(tx) {
+				vorpal.log("TX",tx);	
+				callback();
+			});
+		});
+	} else
+	if(typeof args.options.disallow != "undefined") {
+		node.stromkontoproxy(sko).then(function(skp) {
+			skp.modifySender(args.options.allow,false).then(function(tx) {
+				vorpal.log("TX",tx);	
+				callback();
+			});
+		});
+	} else
+	if(typeof args.options.x != "undefined") {
+		node.stromkontoproxy(smart_contract_stromkonto).then(function(skp) {
+			skp.balancesHaben(node.wallet.address).then(function(parent_haben) {
+				if(parent_haben.toString().indexOf(".")>0) parent_haben=0;
+				skp.balancesSoll(node.wallet.address).then(function(parent_soll) {				
+					if(parent_soll.toString().indexOf(".")>0) parent_soll=0;
+					node.stromkontoproxy(sko).then(function(skp) {
+						skp.balancesHaben(node.wallet.address).then(function(child_haben) {
+							if(child_haben.toString().indexOf(".")>0) child_haben=0;
+							skp.balancesSoll(node.wallet.address).then(function(child_soll) {
+								if(child_soll.toString().indexOf(".")>0) child_soll=0;
+								var parent = parent_haben-parent_soll;
+								var child = child_haben-child_soll;								
+								if(parent!=child) {
+									vorpal.log("X",parent-child);		
+									if(parent-child<0){
+											skp.addTx(smart_contract_stromkonto,node.wallet.address,Math.abs(parent-child),0).then(function(tx) {
+												vorpal.log("TX",tx);	
+												callback();
+											});
+										} else {
+											skp.addTx(node.wallet.address,smart_contract_stromkonto,Math,abs(parent-child),0).then(function(tx) {
+												vorpal.log("TX",tx);	
+												callback();
+											});
+										}								
+								} else {
+									callback();
+								}
+							});
+						});
+					});
+				});
+			});
+		});
+	} else {
+		callback();	
+	}
+}
+function cmd_balancing(args, callback) {
+	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	  
+	node.roleLookup().then(function(rl) {
+			rl.relations(node.wallet.address,42).then(function(tx) {
+				if(tx=="0x0000000000000000000000000000000000000000") {
+					node.stromkontoproxyfactory().then(function(skof) {
+							skof.build().then(function(sko) {
+									rl.setRelation(42,sko).then(function(sr) {
+											delegates_balancing(args,callback,sko,node);											
+											
+									});
+							});
+					});
+				} else {
+					delegates_balancing(args,callback,tx,node);			
+				}				
+			});
+		});		
+ }		
 vorpal
   .command('retrieve <meter_point_id>')    
   .description("Retrieves Meter Point Reading for given external Meter Point ID.") 
@@ -135,6 +211,7 @@ vorpal
   .command('account <meter_point_id>')    
   .description("Get Address an keys for given external Meter Point ID.") 
   .option('--import <privateKey>','Import private Key as Meter Point. Add PKI infront of key!')
+  .option('--name <SpeakingName>','Set a Name associated with BC address')
   .action(function (args, callback) {	 
 	var node={};
 	if(typeof args.options.import != "undefined") {
@@ -143,13 +220,23 @@ vorpal
 	} else {
 		node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
 	}
-	vorpal.log("MPID",args.meter_point_id);
-	vorpal.log("Address",node.wallet.address);
-	vorpal.log("Node",node.nodeWallet.address);
-	vorpal.log("Private Key","PKI"+node.wallet.privateKey);
-	vorpal.log("RSA Public Key",node.RSAPublicKey);
-	vorpal.log("RSA Private Key",node.RSAPrivateKey);
-	callback();
+	if(typeof args.options.name != "undefined") {
+		node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
+		node.roleLookup().then(function(rl) {
+				rl.setName(args.options.name).then(function() {
+						vorpal.log("Name set");
+						callback();
+				})
+		});
+	} else {
+		vorpal.log("MPID",args.meter_point_id);
+		vorpal.log("Address",node.wallet.address);
+		vorpal.log("Node",node.nodeWallet.address);
+		vorpal.log("Private Key","PKI"+node.wallet.privateKey);
+		vorpal.log("RSA Public Key",node.RSAPublicKey);
+		vorpal.log("RSA Private Key",node.RSAPrivateKey);
+		callback();
+	}
 });
 vorpal
   .command('credit <meter_point_id> <amount>')    
@@ -194,6 +281,17 @@ vorpal
 			});
 	});	
 });	
+vorpal
+  .command('balancing <meter_point_id>')    
+  .description("(Sub) Balance Group")
+  .option('--allow <mandate>', 'Allow address to book on group (add mandate)')
+  .option('--disallow <mandate>', 'Disallow address to book on group (remove mandate)')
+  .option('-x', 'Cross Balance parent to sub balance')
+  .types({
+    string: ['allow', 'disallow']
+  })
+  .action(cmd_balancing);
+  
 vorpal
   .command('httpservice')    
   .description("Start Lacy Webservice") 
