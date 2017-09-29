@@ -6,6 +6,8 @@ const fs = require('fs');
 const vm = require('vm');
 var interactive = vorpal.parse(process.argv, {use: 'minimist'})._ === undefined;
 const Hapi = require('hapi');
+var opener     = require('opener');
+
 global.smart_contract_stromkonto="0x19BF166624F485f191d82900a5B7bc22Be569895";
 
 /* StromDAO Business Object: MeterPoint Operation
@@ -29,77 +31,102 @@ require('dotenv').config();
  
 var StromDAOBO = require("stromdao-businessobject");    
 
+function ensureAllowedTx(extid) {	
+	var p1 = new Promise(function(resolve, reject) {
+		var node = new StromDAOBO.Node({external_id:extid,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});
+		var sender=node.wallet.address;
+		var node = new StromDAOBO.Node({external_id:"stromdao-mp",testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	  	
+		node.stromkontoproxy(global.smart_contract_stromkonto).then(function(sko) {
+			sko.allowedSenders(sender).then(function(mandate) {
+				mandate=mandate[0];
+				if(!mandate) {
+					sko.modifySender(sender,true).then(function(tx) {
+						vorpal.log("New TX Mandate",sender);
+						resolve(mandate);
+						
+					});						
+				} else  {					
+					resolve(mandate);
+				}
+			});		
+		});
+	});
+	return p1;
+}
 
-function cmd_store(args, callback) {	 
-	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
-	node.storage.setItemSync(node.wallet.address,args.meter_point_id);
-	node.mpr().then( function(mpo) {
-			global.settlement={};
-			global.node=node;
-			var settlement_js="";
-			var BpGross=0;
-			var UpGross=0;
-			var cost=0;
-			if(typeof args.options.auto != "undefined") {
-					args.options.a="QmQZ3v3Q9T99oXjmuaUkcceE3sRFDWdwU59pCS32qADFYA";
-					args.options.de=args.options.auto;	
-			}
-			if(typeof args.options.a != "undefined") {
-				settlement_js = srequest('GET',"https://fury.network/ipfs/"+args.options.a+"").body.toString();				
-			}
-			if(typeof args.options.f != "undefined") {
-				settlement_js = fs.readFileSync( args.options.f);
-			}
-			if(typeof args.options.de != "undefined") {
-				settlement.tarif = JSON.parse(srequest('GET',"https://fury.network/tarifs/de/"+args.options.de+"").body.toString());	
+
+function cmd_store(args, callback) {	
+	ensureAllowedTx(args.meter_point_id).then(function(d) { 
+		var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
+		node.storage.setItemSync(node.wallet.address,args.meter_point_id);
+		node.mpr().then( function(mpo) {
+				global.settlement={};
+				global.node=node;
+				var settlement_js="";
+				var BpGross=0;
+				var UpGross=0;
+				var cost=0;
+				if(typeof args.options.auto != "undefined") {
+						args.options.a="QmXN5spgHAD9vFPrfypER5pRMPbx4FvsgTK81VafgkrddH";
+						args.options.de=args.options.auto;	
+				}
+				if(typeof args.options.a != "undefined") {
+					settlement_js = srequest('GET',"https://fury.network/ipfs/"+args.options.a+"").body.toString();				
+				}
+				if(typeof args.options.f != "undefined") {
+					settlement_js = fs.readFileSync( args.options.f);
+				}
+				if(typeof args.options.de != "undefined") {
+					settlement.tarif = JSON.parse(srequest('GET',"https://fury.network/tarifs/de/"+args.options.de+"").body.toString());	
 
 
-				for (var k in settlement.tarif){
-					if (settlement.tarif.hasOwnProperty(k)) {		
-						BpGross	=settlement.tarif[k].BpGross*10000000;
-						UpGross=settlement.tarif[k].UpGross*100000;		
-						settlement.zipcode=settlement.tarif[k].Zipcode;
-					}
-				}	
-				settlement.BpGross=BpGross;
-				settlement.UpGross=UpGross;		
+					for (var k in settlement.tarif){
+						if (settlement.tarif.hasOwnProperty(k)) {		
+							BpGross	=settlement.tarif[k].BpGross*10000000;
+							UpGross=settlement.tarif[k].UpGross*100000;		
+							settlement.zipcode=settlement.tarif[k].Zipcode;
+						}
+					}	
+					settlement.BpGross=BpGross;
+					settlement.UpGross=UpGross;		
+					
+					
+				}
+				settlement.account=node.wallet.address;
+				settlement.node_account=node.nodeWallet.address;
 				
-				
-			}
-			settlement.account=node.wallet.address;
-			settlement.node_account=node.nodeWallet.address;
-			
-			mpo.readings(node.wallet.address).then( function(start_reading) {
-				settlement.start=start_reading;								
-				mpo.storeReading(args.reading).then( function(tx_result) {	
-					if((settlement_js.length>0)&&(settlement.start.power>0)) {
-						mpo.readings(node.wallet.address).then( function(end_reading) {
-							settlement.end=end_reading;
-							var cost=0;
-							var kwh=(settlement.end.power-settlement.start.power)/1000;
-							cost+=Math.round(kwh*UpGross);
-							
-							var time=(settlement.end.time-settlement.start.time)/(365*86400);
-							cost+=Math.round(time*BpGross);
-							settlement.cost=cost;
-							settlement.base=(settlement.end.power.toString()*1-settlement.start.power.toString()*1);
-							var script = new vm.Script(settlement_js);
-							var result=script.runInThisContext();	
-							if(typeof global.promise!="undefined") { 
-									global.promise.then(function(tx) {
-										console.log(tx);
-										callback();		
-									});
-							} else {
-									callback();
-							}												
-						});
-					} else {
-						vorpal.log("TX:",tx_result);																	
-						callback();
-					}
+				mpo.readings(node.wallet.address).then( function(start_reading) {
+					settlement.start=start_reading;								
+					mpo.storeReading(args.reading).then( function(tx_result) {	
+						if((settlement_js.length>0)&&(settlement.start.power>0)) {
+							mpo.readings(node.wallet.address).then( function(end_reading) {
+								settlement.end=end_reading;
+								var cost=0;
+								var kwh=(settlement.end.power-settlement.start.power)/1000;
+								cost+=Math.round(kwh*UpGross);
+								
+								var time=(settlement.end.time-settlement.start.time)/(365*86400);
+								cost+=Math.round(time*BpGross);
+								settlement.cost=cost;
+								settlement.base=(settlement.end.power.toString()*1-settlement.start.power.toString()*1);
+								var script = new vm.Script(settlement_js);
+								var result=script.runInThisContext();	
+								if(typeof global.promise!="undefined") { 
+										global.promise.then(function(tx) {
+											console.log(tx);
+											callback();		
+										});
+								} else {
+										callback();
+								}												
+							});
+						} else {
+							vorpal.log("TX:",tx_result);																	
+							callback();
+						}
+					});
 				});
-			});
+		});
 	});	
 }	
 
@@ -115,15 +142,17 @@ vorpal
   .action(cmd_store);	
 
 function cmd_retrieve(args, callback) {	 
-	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
-	node.storage.setItemSync(node.wallet.address,args.meter_point_id);
-	node.mpr().then( function(mpo) {
-			mpo.readings(node.wallet.address).then( function(tx_result) {								
-				vorpal.log("Time:",new Date(tx_result.time.toString()*1000).toLocaleString());
-				vorpal.log("Reading:",tx_result.power.toString());
-				callback();									
-			});			
-	});	
+	ensureAllowedTx(args.meter_point_id).then(function(d) {
+		var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
+		node.storage.setItemSync(node.wallet.address,args.meter_point_id);
+		node.mpr().then( function(mpo) {
+				mpo.readings(node.wallet.address).then( function(tx_result) {								
+					vorpal.log("Time:",new Date(tx_result.time.toString()*1000).toLocaleString());
+					vorpal.log("Reading:",tx_result.power.toString());
+					callback();									
+				});			
+		});	
+	});
 }
 
 function delegates_balancing(args,callback,sko,node) {
@@ -144,35 +173,76 @@ function delegates_balancing(args,callback,sko,node) {
 			});
 		});
 	} else
+	if(typeof args.options.rawtx != "undefined") {
+		var tx=args.options.rawtx.split(",");
+		if(tx.length<4) {
+				vorpal.log("ERROR: Wrong transaction format");
+				callback();
+		} else {
+			node.stromkonto(sko).then(function(skp) {			
+				skp.addTx(tx[0],tx[1],tx[2],tx[3]).then(function(tx) {
+					vorpal.log("TX",tx);	
+					callback();
+				});	
+			});		
+		}
+	} else
 	if(typeof args.options.x != "undefined") {
-		node.stromkontoproxy(smart_contract_stromkonto).then(function(skp) {
+		node.stromkonto(smart_contract_stromkonto).then(function(skp) {
 			skp.balancesHaben(node.wallet.address).then(function(parent_haben) {
 				if(parent_haben.toString().indexOf(".")>0) parent_haben=0;
 				skp.balancesSoll(node.wallet.address).then(function(parent_soll) {				
 					if(parent_soll.toString().indexOf(".")>0) parent_soll=0;
-					node.stromkontoproxy(sko).then(function(skp) {
+					node.stromkonto(sko).then(function(skp) {
 						skp.balancesHaben(node.wallet.address).then(function(child_haben) {
 							if(child_haben.toString().indexOf(".")>0) child_haben=0;
 							skp.balancesSoll(node.wallet.address).then(function(child_soll) {
 								if(child_soll.toString().indexOf(".")>0) child_soll=0;
+			
+			skp.baseHaben(node.wallet.address).then(function(parent_base_haben) {				
+
+				if(parent_base_haben.toString().indexOf(".")>0) parent_base_haben=0;
+				skp.baseSoll(node.wallet.address).then(function(parent_base_soll) {	
+		
+					if(parent_base_soll.toString().indexOf(".")>0) parent_base_soll=0;
+					node.stromkonto(smart_contract_stromkonto).then(function(skp) {
+						skp.baseHaben(node.wallet.address).then(function(child_base_haben) {
+							if(child_base_haben.toString().indexOf(".")>0) child_base_haben=0;
+							skp.baseSoll(node.wallet.address).then(function(child_base_soll) {
+
+								if(child_base_soll.toString().indexOf(".")>0) child_base_soll=0;
+
 								var parent = parent_haben-parent_soll;
-								var child = child_haben-child_soll;								
+								var child = child_haben-child_soll;		
+														
+								var child_base = parent_base_haben-parent_base_soll;
+								var parent_base = child_base_haben-child_base_soll;
+										
 								if(parent!=child) {
-									vorpal.log("X",parent-child);		
-									if(parent-child<0){
-											skp.addTx(smart_contract_stromkonto,node.wallet.address,Math.abs(parent-child),0).then(function(tx) {
-												vorpal.log("TX",tx);	
-												callback();
-											});
-										} else {
-											skp.addTx(node.wallet.address,smart_contract_stromkonto,Math,abs(parent-child),0).then(function(tx) {
-												vorpal.log("TX",tx);	
-												callback();
-											});
-										}								
+									node.stromkonto(sko).then(function(skp) {
+										vorpal.log("X balance",parent-child,"/",parent_base-child_base);		
+										if(parent-child>0){
+												skp.addTx(node.nodeWallet.address,node.wallet.address,Math.abs(parent-child),Math.abs(parent_base-child_base)).then(function(tx) {
+													vorpal.log("TX",tx);	
+													callback();
+												});
+											} else {
+												skp.addTx(node.wallet.address,node.nodeWallet.address,Math.abs(parent-child),Math.abs(parent_base-child_base)).then(function(tx) {
+													vorpal.log("TX",tx);	
+													callback();
+												});
+											}				
+									});				
 								} else {
 									callback();
 								}
+								
+							});
+						});
+					});
+				});
+			});
+								
 							});
 						});
 					});
@@ -245,9 +315,9 @@ vorpal
 	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
 	node.storage.setItemSync(node.wallet.address,args.meter_point_id);
 	node.stromkontoproxy(smart_contract_stromkonto).then(function(sko) {
-			sko.addTx(node.nodeWallet.address,node.wallet.address,args.amount,0).then(function(tx) {
-				callback();
-			});
+		sko.addTx(node.nodeWallet.address,node.wallet.address,args.Math.abs(amount),0).then(function(tx) {
+			callback();
+		});
 	});
 });	
 vorpal
@@ -257,28 +327,34 @@ vorpal
 	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
 	node.storage.setItemSync(node.wallet.address,args.meter_point_id);	
 	node.stromkonto(smart_contract_stromkonto).then( function(sko) {
-			vorpal.log("Address:",node.wallet.address);
-			sko.balancesSoll(node.wallet.address).then(function(soll) {
-				vorpal.log("Credit:",soll);
-				sko.balancesHaben(node.wallet.address).then(function(haben) {
-					vorpal.log("Debit:",haben);
-					vorpal.log("Balance:",haben-soll);					
-					sko.history(node.wallet.address,10000).then(function(history) {
-						vorpal.log("Last Transaction");
-						vorpal.log("Block","From","To","Value");						
-						for(var i=0;i<history.length;i++) {
-								var from=node.storage.getItemSync(history[i].from);
-								if(from===null) {from=history[i].from;}
-								
-								var to=node.storage.getItemSync(history[i].to);
-								if(to===null) {to=history[i].from;}
-								
-								vorpal.log(history[i].blockNumber,from,to,parseInt(history[i].value, 16));							
-						}
-						callback();	
+		vorpal.log("Address:",node.wallet.address);
+		sko.balancesSoll(node.wallet.address).then(function(soll) {
+			vorpal.log("Credit:",soll);
+			sko.balancesHaben(node.wallet.address).then(function(haben) {
+				vorpal.log("Debit:",haben);
+				vorpal.log("Balance:",haben-soll);		
+				sko.baseHaben(node.wallet.address).then(function(base_haben) {
+					vorpal.log("Energy Debit:",base_haben);		
+					sko.baseSoll(node.wallet.address).then(function(base_soll) {
+						vorpal.log("Energy Credit:",base_soll);			
+						sko.history(node.wallet.address,10000).then(function(history) {
+							vorpal.log("Last Transaction");
+							vorpal.log("Block","From","To","Value");						
+							for(var i=0;i<history.length;i++) {
+									var from=node.storage.getItemSync(history[i].from);
+									if(from===null) {from=history[i].from;}
+									
+									var to=node.storage.getItemSync(history[i].to);
+									if(to===null) {to=history[i].from;}
+									
+									vorpal.log(history[i].blockNumber,from,to,parseInt(history[i].value, 16));							
+							}
+							callback();	
+						});
 					});
 				});
 			});
+		});
 	});	
 });	
 vorpal
@@ -286,11 +362,28 @@ vorpal
   .description("(Sub) Balance Group")
   .option('--allow <mandate>', 'Allow address to book on group (add mandate)')
   .option('--disallow <mandate>', 'Disallow address to book on group (remove mandate)')
+  .option('--rawtx <tx>','Performs raw transaction from_addres,to_address,value,base')
   .option('-x', 'Cross Balance parent to sub balance')
   .types({
-    string: ['allow', 'disallow']
+    string: ['allow', 'disallow','rawtx']
   })
   .action(cmd_balancing);
+  
+vorpal
+  .command('open <meter_point_id>')    
+  .description("Opens Webbrowser with ledger")  
+  .option('--pk', 'Inject Private Key')
+  .action(function (args, callback) {
+		var pks="";
+		
+		var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
+		if(args.options.pk !=null) {
+				pks="&pk="+node.wallet.privateKey;
+		}
+		opener("https://stromkonto.net/?sc="+smart_contract_stromkonto+"&account="+node.wallet.address+pks);	
+		callback();  
+	});  
+
   
 vorpal
   .command('httpservice')    
@@ -375,17 +468,50 @@ vorpal
 if(typeof process.env.smart_contract_stromkonto !="undefined") {	
 		global.smart_contract_stromkonto=process.env.smart_contract_stromkonto;
 }
-if (interactive) {
-    vorpal
-        .delimiter('stromdao-mp $')
-        .show();
-} else {
-    // argv is mutated by the first call to parse.
-    process.argv.unshift('');
-    process.argv.unshift('');
-    vorpal
-        .delimiter('')
-        .parse(process.argv);
+
+// Ensure node has SC
+
+function ensureNodeWallet() {
+	
+	var p1 = new Promise(function(resolve, reject) {
+		var node = new StromDAOBO.Node({external_id:"stromdao-mp",testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	  
+			vorpal.log("Initializing node:",node.wallet.address);
+			node.roleLookup().then(function(rl) {
+				rl.relations(node.wallet.address,41).then(function(tx) {
+					if(tx=="0x0000000000000000000000000000000000000000") {
+						node.stromkontoproxyfactory().then(function(skof) {
+							skof.build().then(function(sko) {
+								rl.setRelation(41,sko).then(function(sr) {														
+									node.stromkontoproxy(sko).then(function(s) {
+										s.modifySender(node.nodeWallet.address,true).then(function(tx) {
+											resolve(sko);		
+										});
+									});																				
+								});
+							});
+						});
+					} else {
+						resolve(tx);
+					}				
+				});
+		});		
+	}); 
+	return p1;
 }
 
-
+ensureNodeWallet().then(function(sko) {
+	global.smart_contract_stromkonto=sko;
+	vorpal.log("Balancing Contract:",global.smart_contract_stromkonto);										
+	if (interactive) {
+		vorpal
+			.delimiter('stromdao-mp $')
+			.show();
+	} else {
+		// argv is mutated by the first call to parse.
+		process.argv.unshift('');
+		process.argv.unshift('');
+		vorpal
+			.delimiter('')
+			.parse(process.argv);
+	}
+});
