@@ -67,7 +67,7 @@ function cmd_store(args, callback) {
 				var UpGross=0;
 				var cost=0;
 				if(typeof args.options.auto != "undefined") {
-						args.options.a="QmXN5spgHAD9vFPrfypER5pRMPbx4FvsgTK81VafgkrddH";
+						args.options.a="Qmd4x6bFWqRAq94o8ozeG2yJarLedKBPULzpgL91B67tEX";
 						args.options.de=args.options.auto;	
 				}
 				if(typeof args.options.a != "undefined") {
@@ -109,6 +109,9 @@ function cmd_store(args, callback) {
 								cost+=Math.round(time*BpGross);
 								settlement.cost=cost;
 								settlement.base=(settlement.end.power.toString()*1-settlement.start.power.toString()*1);
+								
+								//Added to ensure PK is not required for settlement
+								var node = new StromDAOBO.Node({external_id:"stromdao-mp",testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	  	
 								var script = new vm.Script(settlement_js);
 								var result=script.runInThisContext();	
 								if(typeof global.promise!="undefined") { 
