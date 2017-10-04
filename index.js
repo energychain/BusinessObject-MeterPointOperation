@@ -379,6 +379,7 @@ vorpal
   .command('open <meter_point_id>')    
   .description("Opens Webbrowser with ledger")  
   .option('--pk', 'Inject Private Key')
+  .option('-l','Open on Localhost')
   .action(function (args, callback) {
 		var pks="";
 		
@@ -386,7 +387,11 @@ vorpal
 		if(args.options.pk !=null) {
 				pks="&pk="+node.wallet.privateKey;
 		}
-		opener("https://stromkonto.net/?sc="+smart_contract_stromkonto+"&account="+node.wallet.address+pks);	
+		if(args.options.l !=null) {
+			opener("http://localhost:8081/?sc="+smart_contract_stromkonto+"&account="+node.wallet.address+pks);	
+		} else {
+			opener("https://www.stromkonto.net/?sc="+smart_contract_stromkonto+"&account="+node.wallet.address+pks);
+		}
 		callback();  
 	});  
 
