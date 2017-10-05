@@ -1,3 +1,6 @@
 [submodule "static/reveal.js"]
 	path = static/reveal.js
 	url = https://github.com/hakimel/reveal.js.git
+[submodule "stromkonto"]
+	path = stromkonto
+	url = https://github.com/energychain/stromkonto

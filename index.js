@@ -388,7 +388,7 @@ vorpal
 				pks="&pk="+node.wallet.privateKey;
 		}
 		if(args.options.l !=null) {
-			opener("http://localhost:8081/?sc="+smart_contract_stromkonto+"&account="+node.wallet.address+pks);	
+			opener("http://localhost:8000/?sc="+smart_contract_stromkonto+"&account="+node.wallet.address+pks);	
 		} else {
 			opener("https://www.stromkonto.net/?sc="+smart_contract_stromkonto+"&account="+node.wallet.address+pks);
 		}
@@ -458,7 +458,7 @@ vorpal
 			path: '/{param*}',
 			handler: {
 				directory: {
-					path: 'static/'
+					path: 'stromkonto/'
 				}
 			}
 		});
@@ -471,7 +471,7 @@ vorpal
 			throw err;
 		}
 		console.log(`Server running at: ${server.info.uri}`);
-		//callback();
+		callback();
 	});
 	
 });	
