@@ -1,6 +1,6 @@
 {
   "name": "stromdao-bo-mpo",
-  "version": "0.1.22",
+  "version": "0.1.24",
   "engines": {
     "node": ">=7.6.0",
     "npm": ">=4.5.0"
@@ -36,6 +36,7 @@
   "homepage": "https://github.com/energychain/BusinessObject-MeterPointOperation#readme",
   "dependencies": {
     "dotenv": "^4.0.0",
+    "file-zip": "^1.0.1",
     "hapi": "^16.1.1",
     "inert": "^4.2.1",
     "opener": "^1.4.3",

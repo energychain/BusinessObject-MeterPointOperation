@@ -366,6 +366,21 @@ vorpal
 	});
 });	
 vorpal
+  .command('backup <zipfilename>')    
+  .description("Exports local storage to zip file.") 
+  .action(function (args, callback) {	
+	var zip = require('file-zip'); 
+	zip.zipFolder(['./.node-persist'],args.zipfilename,function(err){
+		if(err){
+			vorpal.log('backup zip error',err)
+		}else{
+			vorpal.log('Backup saved to',args.zipfilename);
+		}
+		callback();
+	});		
+});	
+
+vorpal
   .command('ledger <meter_point_id>')    
   .description("Retrieve Ledger Information for meter point id (Stromkonto).") 
   .action(function (args, callback) {	 
