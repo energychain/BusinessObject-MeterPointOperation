@@ -181,7 +181,7 @@ vorpal
   .description("Stores Meter Point Reading for given external Meter Point ID.") 
   .option('-a <ipfs_hash>','Apply settlement/clearing from IPFS Hash')
   .option('-f <file>','Apply settlement/clearing from file')
-  .option('--bc','Performs cross balancing after commit (eq. to balancing -x command)')
+  .option('--bx','Performs cross balancing after commit (eq. to balancing -x command)')
   .option('--de <zipcode>','Add tarif for zipcode (Germany)')
   .option('--auto <zipcode>','Auto settle to dev/testing ledger (only Germany)')
   .action(cmd_store);	
