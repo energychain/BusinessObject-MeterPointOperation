@@ -72,7 +72,7 @@ function cmd_store(args, callback) {
 			var dgy = new Discovergy("dgy_token",node);	
 			dgy.getMeterReading(args.meter_point_id, function(o) {	
 						var values = o.values;
-						var energy = ""+values.energyOut+"";
+						var energy = ""+values.energy+"";
 						energy=energy.substr(0,energy.length-7);
 						args.reading=energy;
 						cmd_store(args,callback);
