@@ -60,6 +60,26 @@ function ensureAllowedTx(extid) {
 
 function cmd_store(args, callback) {	
 	ensureAllowedTx(args.meter_point_id).then(function(d) { 
+		if(args.reading==null) {
+			var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
+			var token=node.storage.getItemSync("dgy_token");
+			if(token==null) { 
+					console.log("ERROR: If no reading is specified a valid Discovergy API login needs to be available. HINT: Use discovergy to login");
+					callback();
+					return;
+			}
+			console.log(token);
+			var Discovergy = require("stromdao-bo-discovergy");		
+			var dgy = new Discovergy("dgy_token",node);	
+			dgy.getMeterReading(args.meter_point_id, function(o) {	
+						var values = o.values;
+						var energy = ""+values.energyOut+"";
+						energy=energy.substr(0,energy.length-7);
+						args.reading=energy;
+						cmd_store(args,callback);
+			});
+			return;
+		}
 		var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
 		node.storage.setItemSync(node.wallet.address,args.meter_point_id);
 		node.mpr().then( function(mpo) {
@@ -139,7 +159,7 @@ function cmd_store(args, callback) {
 
 	
 vorpal
-  .command('store <meter_point_id> <reading>')    
+  .command('store <meter_point_id> [reading]')    
   .description("Stores Meter Point Reading for given external Meter Point ID.") 
   .option('-a <ipfs_hash>','Apply settlement/clearing from IPFS Hash')
   .option('-f <file>','Apply settlement/clearing from file')
@@ -395,7 +415,23 @@ vorpal
 		callback();  
 	});  
 
-  
+vorpal
+  .command('discovergy <meter_point_id>')
+  .option('-u --username <user>', 'Username for Discovergy API')    
+  .option('-p --password <pass>', 'Password for Discovergy API')
+  .description("Links Meter Point to Discovergy Smart Meter Gateway (API)")    
+  .action(function (args, callback) {		  
+		var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
+		var Discovergy = require("stromdao-bo-discovergy");		
+		var oauth_name="dgy_oauth_"+Math.random();
+		
+		var dgy = new Discovergy("dgy_token",node);	
+		
+		dgy.CreateAuth(node,args.options.username,args.options.password).then(function(token) {				
+			node.storage.setItemSync("dgy_token",token);
+			callback();  
+		});
+	});    
 vorpal
   .command('httpservice')    
   .description("Start Lacy Webservice") 
