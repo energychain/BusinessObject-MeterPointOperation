@@ -64,11 +64,10 @@ function cmd_store(args, callback) {
 			var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
 			var token=node.storage.getItemSync("dgy_token");
 			if(token==null) { 
-					console.log("ERROR: If no reading is specified a valid Discovergy API login needs to be available. HINT: Use discovergy to login");
+					vorpal.log("ERROR: If no reading is specified a valid Discovergy API login needs to be available. HINT: Use discovergy to login");
 					callback();
 					return;
-			}
-			console.log(token);
+			}			
 			var Discovergy = require("stromdao-bo-discovergy");		
 			var dgy = new Discovergy("dgy_token",node);	
 			dgy.getMeterReading(args.meter_point_id, function(o) {	
@@ -119,38 +118,57 @@ function cmd_store(args, callback) {
 				settlement.node_account=node.nodeWallet.address;
 				
 				mpo.readings(node.wallet.address).then( function(start_reading) {
-					settlement.start=start_reading;								
+					settlement.start=start_reading;											
 					mpo.storeReading(args.reading).then( function(tx_result) {	
-						if((settlement_js.length>0)&&(settlement.start.power>0)) {
-							mpo.readings(node.wallet.address).then( function(end_reading) {
-								settlement.end=end_reading;
-								var cost=0;
-								var kwh=(settlement.end.power-settlement.start.power)/1000;
-								cost+=Math.round(kwh*UpGross);
-								
-								var time=(settlement.end.time-settlement.start.time)/(365*86400);
-								cost+=Math.round(time*BpGross);
-								settlement.cost=cost;
-								settlement.base=(settlement.end.power.toString()*1-settlement.start.power.toString()*1);
-								
-								//Added to ensure PK is not required for settlement
-								var node = new StromDAOBO.Node({external_id:"stromdao-mp",testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	  	
-								var script = new vm.Script(settlement_js);
-								var result=script.runInThisContext();	
-								if(typeof global.promise!="undefined") { 
-										global.promise.then(function(tx) {
-											console.log(tx);
-											callback();		
+						try {
+							if((settlement_js.length>0)&&(settlement.start.power>0)) {
+								mpo.readings(node.wallet.address).then( function(end_reading) {
+									settlement.end=end_reading;
+									var cost=0;
+									var kwh=(settlement.end.power-settlement.start.power)/1000;
+									cost+=Math.round(kwh*UpGross);
+									
+									var time=(settlement.end.time-settlement.start.time)/(365*86400);
+									cost+=Math.round(time*BpGross);
+									settlement.cost=cost;
+									settlement.base=(settlement.end.power.toString()*1-settlement.start.power.toString()*1);
+									
+									//Added to ensure PK is not required for settlement
+									var node = new StromDAOBO.Node({external_id:"stromdao-mp",testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	  	
+									var script = new vm.Script(settlement_js);
+									var result=script.runInThisContext();	
+									if(typeof global.promise!="undefined") { 
+											global.promise.then(function(tx) {
+												console.log(tx);
+												if(typeof args.options.bx != "undefined") {
+														vorpal.execSync('balancing -x '+args.meter_point_id);
+												} 
+												callback();		
+											});
+									} else {
+											if(typeof args.options.bx != "undefined") {
+														vorpal.execSync('balancing -x '+args.meter_point_id);
+											} 
+											callback();
+									}												
+								}).catch(function(err) {
+										vorpal.log("ERROR Captured in Settlement",err);
+										mpo.storeReading(start_reading.power).then( function(tx_result) {	
+											callback();
 										});
-								} else {
-										callback();
-								}												
-							});
-						} else {
-							vorpal.log("TX:",tx_result);																	
-							callback();
+								});
+							} else {
+								vorpal.log("TX:",tx_result);																	
+								callback();
+							}
+						} catch(err) {
+								vorpal.log("ERROR Captured",err);
+								mpo.storeReading(start_reading.power).then( function(tx_result) {	
+									callback();
+								});
 						}
 					});
+					
 				});
 		});
 	});	
@@ -163,6 +181,7 @@ vorpal
   .description("Stores Meter Point Reading for given external Meter Point ID.") 
   .option('-a <ipfs_hash>','Apply settlement/clearing from IPFS Hash')
   .option('-f <file>','Apply settlement/clearing from file')
+  .option('--bc','Performs cross balancing after commit (eq. to balancing -x command)')
   .option('--de <zipcode>','Add tarif for zipcode (Germany)')
   .option('--auto <zipcode>','Auto settle to dev/testing ledger (only Germany)')
   .action(cmd_store);	

@@ -57,7 +57,11 @@ http://docs.stromdao.de/presentations/20170922/
 Nützlich für den Einstieg in das Business Objekt:
 https://demo.stromdao.de/introspect.html
 
+## SmartMeter Gateway Integration
+Zur Zeit werden lediglich die Endpunkte von [Discovergy](https://discovergy.com) unterstützt. Für jeden Zähler (meter_point_id) kann eine API Kennung hinterlegt werden. 
+Sobald diese hinterlegt ist, kann der Konsens in der Blockchain durch den `store` Befehl geschrieben werden, wobei der Zählerstand nicht mit angegeben werden muss.
 
+Weitere Informationen im [Enhancement Request](https://github.com/energychain/BusinessObject-MeterPointOperation/issues/2)
 
 ## Feedback/Collaboration
 - https://fury.network/
