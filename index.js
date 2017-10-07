@@ -437,23 +437,34 @@ vorpal
   .option('--pk', 'Inject Private Key')
   .option('-l','Open on Localhost')
   .option('-p','Print open url to console (do not open).')
+  .option('-b','Open Balancing Group instead of account balance.')
   .action(function (args, callback) {
 		var pks="";
 		
 		var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
-		if(args.options.pk !=null) {
-				pks="&pk="+node.wallet.privateKey;
-		}
-		if(args.options.l !=null) {
-			opener("http://localhost:8000/?sc="+smart_contract_stromkonto+"&account="+node.wallet.address+pks);	
-		} else {
-			if(args.options.p !=null) {				
-				vorpal.log("https://www.stromkonto.net/?sc="+smart_contract_stromkonto+"&account="+node.wallet.address+pks);
-			} else 
-			opener("https://www.stromkonto.net/?sc="+smart_contract_stromkonto+"&account="+node.wallet.address+pks);
-		}
-		callback();  
+		sc=smart_contract_stromkonto;
+		node.roleLookup().then(function(rl) {
+			rl.relations(node.wallet.address,42).then(function(tx) {
+			if(typeof args.options.b == "undefined") {
+					if(tx!="0x0000000000000000000000000000000000000000") {
+						sc=tx;
+					}
+					if(args.options.pk !=null) {
+							pks="&pk="+node.wallet.privateKey;
+					}
+					if(args.options.l !=null) {
+						opener("http://localhost:8000/?sc="+smart_contract_stromkonto+"&account="+node.wallet.address+pks);	
+					} else {
+						if(args.options.p !=null) {				
+							vorpal.log("https://www.stromkonto.net/?sc="+smart_contract_stromkonto+"&account="+node.wallet.address+pks);
+						} else 
+						opener("https://www.stromkonto.net/?sc="+smart_contract_stromkonto+"&account="+node.wallet.address+pks);
+					}
+					callback();  					
+			}		
+		});	
 	});  
+});
 
 vorpal
   .command('discovergy <meter_point_id>')
