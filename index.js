@@ -453,12 +453,12 @@ vorpal
 							pks="&pk="+node.wallet.privateKey;
 					}
 					if(args.options.l !=null) {
-						opener("http://localhost:8000/?sc="+smart_contract_stromkonto+"&account="+node.wallet.address+pks);	
+						opener("http://localhost:8000/?sc="+sc+"&account="+node.wallet.address+pks);	
 					} else {
 						if(args.options.p !=null) {				
-							vorpal.log("https://www.stromkonto.net/?sc="+smart_contract_stromkonto+"&account="+node.wallet.address+pks);
+							vorpal.log("https://www.stromkonto.net/?sc="+sc+"&account="+node.wallet.address+pks);
 						} else 
-						opener("https://www.stromkonto.net/?sc="+smart_contract_stromkonto+"&account="+node.wallet.address+pks);
+						opener("https://www.stromkonto.net/?sc="+sc+"&account="+node.wallet.address+pks);
 					}
 					callback();  					
 			}		
