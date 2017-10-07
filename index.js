@@ -33,25 +33,20 @@ var StromDAOBO = require("stromdao-businessobject");
 
 function ensureAllowedTx(extid) {	
 	var p1 = new Promise(function(resolve, reject) {
-		/*
 		var node = new StromDAOBO.Node({external_id:extid,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});
 		var sender=node.wallet.address;
-		var node = new StromDAOBO.Node({external_id:"stromdao-mp",testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	  	
-		node.stromkontoproxy(global.smart_contract_stromkonto).then(function(sko) {
-			sko.allowedSenders(sender).then(function(mandate) {
-				mandate=mandate[0];
-				if(!mandate) {
-					sko.modifySender(sender,true).then(function(tx) {
-						vorpal.log("New TX Mandate",sender);
-						resolve(mandate);
-						
-					});						
-				} else  {					
-					resolve(mandate);
-				}
-			});		
-		});
-		*/
+		
+		var node = new StromDAOBO.Node({external_id:"stromdao-mp",testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	  
+		var managed_meters= node.storage.getItemSync("managed_meters");
+		
+		if(managed_meters==null) managed_meters=[]; else managed_meters=JSON.parse(managed_meters);
+		
+		if(node.storage.getItemSync("managed_"+extid)==null) {
+				managed_meters.push(extid);
+				node.storage.setItemSync("managed_meters",JSON.stringify(managed_meters));	
+				node.storage.setItemSync("managed_"+extid,sender);				
+		}
+		
 		resolve("mandated");
 	});
 	return p1;
@@ -99,9 +94,15 @@ function cmd_store(args, callback) {
 					settlement_js = fs.readFileSync( args.options.f);
 				}
 				if(typeof args.options.de != "undefined") {
-					settlement.tarif = JSON.parse(srequest('GET',"https://fury.network/tarifs/de/"+args.options.de+"").body.toString());	
-
-
+					try {
+						settlement.tarif = JSON.parse(srequest('GET',"https://fury.network/tarifs/de/"+args.options.de+"").body.toString());	
+						node.storage.setItemSync("tarif_"+args.options.de,JSON.stringify(settlement.tarif));
+					} catch(e) {
+						if(node.storage.setItemSync("tarif_"+args.options.de)!=null) {
+							settlement.tarif=JSON.parse(node.storage.setItemSync("tarif_"+args.options.de));	
+						}
+					}
+				
 					for (var k in settlement.tarif){
 						if (settlement.tarif.hasOwnProperty(k)) {		
 							BpGross	=settlement.tarif[k].BpGross*10000000;
