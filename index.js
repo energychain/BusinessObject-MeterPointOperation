@@ -449,6 +449,7 @@ vorpal
 					if(tx!="0x0000000000000000000000000000000000000000") {
 						sc=tx;
 					}
+			}
 					if(args.options.pk !=null) {
 							pks="&pk="+node.wallet.privateKey;
 					}
@@ -461,7 +462,7 @@ vorpal
 						opener("https://www.stromkonto.net/?sc="+sc+"&account="+node.wallet.address+pks);
 					}
 					callback();  					
-			}		
+					
 		});	
 	});  
 });
@@ -491,6 +492,7 @@ vorpal
 		var node = new StromDAOBO.Node({external_id:"stromdao-mp",testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	  
 		var managed_meters= node.storage.getItemSync("managed_meters");
 		vorpal.log(JSON.parse(managed_meters));
+		callback();
 	}); 		
 		
 vorpal
