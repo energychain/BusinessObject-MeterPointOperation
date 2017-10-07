@@ -115,7 +115,8 @@ function cmd_store(args, callback) {
 					
 				}
 				settlement.account=node.wallet.address;
-				settlement.node_account=node.nodeWallet.address;
+				settlement.node_account=global.blk_address;
+				settlement.node_wallet=node.nodeWallet.address;
 				
 				mpo.readings(node.wallet.address).then( function(start_reading) {
 					settlement.start=start_reading;											
@@ -138,17 +139,16 @@ function cmd_store(args, callback) {
 									var script = new vm.Script(settlement_js);
 									var result=script.runInThisContext();	
 									if(typeof global.promise!="undefined") { 
-											global.promise.then(function(tx) {
-												console.log(tx);
+											global.promise.then(function(tx) {												
 												if(typeof args.options.bx != "undefined") {
-														vorpal.execSync('balancing -x '+args.meter_point_id);
-												} 
+														vorpal.exec('balancing -x '+args.meter_point_id,callback);
+												} else
 												callback();		
 											});
 									} else {
 											if(typeof args.options.bx != "undefined") {
-														vorpal.execSync('balancing -x '+args.meter_point_id);
-											} 
+														vorpal.exec('balancing -x '+args.meter_point_id,callback);
+											} else
 											callback();
 									}												
 								}).catch(function(err) {
@@ -267,19 +267,19 @@ function delegates_balancing(args,callback,sko,node) {
 									node.stromkonto(sko).then(function(skp) {
 										vorpal.log("X balance",parent-child,"/",parent_base-child_base);		
 										if(parent-child>0){
-												skp.addTx(node.nodeWallet.address,node.wallet.address,Math.abs(parent-child),Math.abs(parent_base-child_base)).then(function(tx) {
+												skp.addTx(global.blk_address,node.wallet.address,Math.abs(parent-child),Math.abs(parent_base-child_base)).then(function(tx) {
 													vorpal.log("TX",tx);	
-													callback();
+													if(typeof callback!="undefined") callback();
 												});
 											} else {
-												skp.addTx(node.wallet.address,node.nodeWallet.address,Math.abs(parent-child),Math.abs(parent_base-child_base)).then(function(tx) {
+												skp.addTx(node.wallet.address,global.blk_address,Math.abs(parent-child),Math.abs(parent_base-child_base)).then(function(tx) {
 													vorpal.log("TX",tx);	
-													callback();
+													if(typeof callback!="undefined") callback();
 												});
 											}				
 									});				
 								} else {
-									callback();
+									if(typeof callback!="undefined") callback();
 								}
 								
 							});
@@ -347,6 +347,7 @@ vorpal
 		vorpal.log("MPID",args.meter_point_id);
 		vorpal.log("Address",node.wallet.address);
 		vorpal.log("Node",node.nodeWallet.address);
+		vorpal.log("BLK",global.blk_address);
 		vorpal.log("Private Key","PKI"+node.wallet.privateKey);
 		vorpal.log("RSA Public Key",node.RSAPublicKey);
 		vorpal.log("RSA Private Key",node.RSAPrivateKey);
@@ -552,17 +553,21 @@ if(typeof process.env.smart_contract_stromkonto !="undefined") {
 
 // Ensure node has SC
 
-function ensureNodeWallet() {
-	
+function ensureNodeWallet() {	
 	var p1 = new Promise(function(resolve, reject) {
-		var node = new StromDAOBO.Node({external_id:"stromdao-mp",testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	  
+		if(typeof process.env.privateKey !="undefined") {				
+			var node = new StromDAOBO.Node({external_id:"stromdao-mp",privateKey:process.env.privateKey,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	  
+		} else {
+			var node = new StromDAOBO.Node({external_id:"stromdao-mp",testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	  
+		}
 			vorpal.log("Initializing node:",node.wallet.address);
+			global.blk_address=node.wallet.address;
 			node.roleLookup().then(function(rl) {
-				rl.relations(node.wallet.address,41).then(function(tx) {
+				rl.relations(node.wallet.address,42).then(function(tx) {
 					if(tx=="0x0000000000000000000000000000000000000000") {
 						node.stromkontoproxyfactory().then(function(skof) {
 							skof.build().then(function(sko) {
-								rl.setRelation(41,sko).then(function(sr) {														
+								rl.setRelation(42,sko).then(function(sr) {														
 									node.stromkontoproxy(sko).then(function(s) {
 										s.modifySender(node.nodeWallet.address,true).then(function(tx) {
 											resolve(sko);		
