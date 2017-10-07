@@ -472,6 +472,16 @@ vorpal
 			callback();  
 		});
 	});    
+
+vorpal
+  .command('list')  
+  .description("List of managed meter points")    
+  .action(function (args, callback) {		  	
+		var node = new StromDAOBO.Node({external_id:"stromdao-mp",testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	  
+		var managed_meters= node.storage.getItemSync("managed_meters");
+		vorpal.log(JSON.parse(managed_meters));
+	}); 		
+		
 vorpal
   .command('httpservice')    
   .description("Start Lacy Webservice") 
