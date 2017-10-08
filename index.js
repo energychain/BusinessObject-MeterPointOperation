@@ -272,7 +272,7 @@ function delegates_balancing(args,callback,sko,node) {
 								if(parent!=child) {
 									node.stromkonto(sko).then(function(skp) {
 										vorpal.log("X balance",parent-child,"/",parent_base-child_base);		
-										if(parent-child>0){
+										if(parent-child<0){
 												skp.addTx(global.blk_address,node.wallet.address,Math.abs(parent-child),Math.abs(parent_base-child_base)).then(function(tx) {
 													vorpal.log("TX",tx);	
 													if(typeof callback!="undefined") callback();
