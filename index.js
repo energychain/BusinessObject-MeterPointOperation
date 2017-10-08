@@ -263,10 +263,10 @@ function delegates_balancing(args,callback,sko,node) {
 
 								if(child_base_soll.toString().indexOf(".")>0) child_base_soll=0;
 
-								var parent = parent_haben-parent_soll;
+								var parent = (parent_haben-parent_soll)*(-1);
 								var child = child_haben-child_soll;		
 														
-								var child_base = parent_base_haben-parent_base_soll;
+								var child_base = (parent_base_haben-parent_base_soll)*(-1);
 								var parent_base = child_base_haben-child_base_soll;
 										
 								if(parent!=child) {
