@@ -121,8 +121,8 @@ function cmd_store(args, callback) {
 				
 				mpo.readings(node.wallet.address).then( function(start_reading) {
 					settlement.start=start_reading;		
-					if(start_reading>args.reading) {
-							vorpal.log("ERROR: Negative settlement requested",start_reading,args.reading);
+					if(start_reading.power>args.reading) {
+							vorpal.log("ERROR: Negative settlement requested",start_reading.power,args.reading);
 							callback();
 							return;
 					}									
