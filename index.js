@@ -245,9 +245,9 @@ function delegates_balancing(args,callback,sko,node) {
 				skp.balancesSoll(node.wallet.address).then(function(parent_soll) {				
 					if(parent_soll.toString().indexOf(".")>0) parent_soll=0;
 					node.stromkonto(sko).then(function(skp) {
-						skp.balancesHaben(node.wallet.address).then(function(child_haben) {
+						skp.balancesHaben(blk_address).then(function(child_haben) {
 							if(child_haben.toString().indexOf(".")>0) child_haben=0;
-							skp.balancesSoll(node.wallet.address).then(function(child_soll) {
+							skp.balancesSoll(blk_address).then(function(child_soll) {
 								if(child_soll.toString().indexOf(".")>0) child_soll=0;
 			
 			skp.baseHaben(node.wallet.address).then(function(parent_base_haben) {				
@@ -257,9 +257,9 @@ function delegates_balancing(args,callback,sko,node) {
 		
 					if(parent_base_soll.toString().indexOf(".")>0) parent_base_soll=0;
 					node.stromkonto(smart_contract_stromkonto).then(function(skp) {
-						skp.baseHaben(node.wallet.address).then(function(child_base_haben) {
+						skp.baseHaben(blk_address).then(function(child_base_haben) {
 							if(child_base_haben.toString().indexOf(".")>0) child_base_haben=0;
-							skp.baseSoll(node.wallet.address).then(function(child_base_soll) {
+							skp.baseSoll(blk_address).then(function(child_base_soll) {
 
 								if(child_base_soll.toString().indexOf(".")>0) child_base_soll=0;
 
