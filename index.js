@@ -244,15 +244,19 @@ function delegates_balancing(args,callback,sko,node) {
 		}
 	} else
 	if(typeof args.options.x != "undefined") {
+		blk=blk_address;
+		if(typeof args.options.xa != "undefined") {
+			blk=args.options.xa;
+		}
 		node.stromkonto(smart_contract_stromkonto).then(function(skp) {
 			skp.balancesHaben(node.wallet.address).then(function(parent_haben) {
 				if(parent_haben.toString().indexOf(".")>0) parent_haben=0;
 				skp.balancesSoll(node.wallet.address).then(function(parent_soll) {				
 					if(parent_soll.toString().indexOf(".")>0) parent_soll=0;
 					node.stromkonto(sko).then(function(skp) {
-						skp.balancesHaben(blk_address).then(function(child_haben) {
+						skp.balancesHaben(blk).then(function(child_haben) {
 							if(child_haben.toString().indexOf(".")>0) child_haben=0;
-							skp.balancesSoll(blk_address).then(function(child_soll) {
+							skp.balancesSoll(blk).then(function(child_soll) {
 								if(child_soll.toString().indexOf(".")>0) child_soll=0;
 			
 			skp.baseHaben(node.wallet.address).then(function(parent_base_haben) {				
@@ -262,9 +266,9 @@ function delegates_balancing(args,callback,sko,node) {
 		
 					if(parent_base_soll.toString().indexOf(".")>0) parent_base_soll=0;
 					node.stromkonto(smart_contract_stromkonto).then(function(skp) {
-						skp.baseHaben(blk_address).then(function(child_base_haben) {
+						skp.baseHaben(blk).then(function(child_base_haben) {
 							if(child_base_haben.toString().indexOf(".")>0) child_base_haben=0;
-							skp.baseSoll(blk_address).then(function(child_base_soll) {
+							skp.baseSoll(blk).then(function(child_base_soll) {
 
 								if(child_base_soll.toString().indexOf(".")>0) child_base_soll=0;
 
@@ -278,12 +282,12 @@ function delegates_balancing(args,callback,sko,node) {
 									node.stromkonto(sko).then(function(skp) {
 										vorpal.log("X balance",parent-child,"/",parent_base-child_base);		
 										if(parent-child<0){
-												skp.addTx(global.blk_address,node.wallet.address,Math.abs(parent-child),Math.abs(parent_base-child_base)).then(function(tx) {
+												skp.addTx(global.blk,node.wallet.address,Math.abs(parent-child),Math.abs(parent_base-child_base)).then(function(tx) {
 													vorpal.log("TX",tx);	
 													if(typeof callback!="undefined") callback();
 												});
 											} else {
-												skp.addTx(node.wallet.address,global.blk_address,Math.abs(parent-child),Math.abs(parent_base-child_base)).then(function(tx) {
+												skp.addTx(node.wallet.address,global.blk,Math.abs(parent-child),Math.abs(parent_base-child_base)).then(function(tx) {
 													vorpal.log("TX",tx);	
 													if(typeof callback!="undefined") callback();
 												});
@@ -436,8 +440,9 @@ vorpal
   .option('--disallow <mandate>', 'Disallow address to book on group (remove mandate)')
   .option('--rawtx <tx>','Performs raw transaction from_addres,to_address,value,base')
   .option('-x', 'Cross Balance parent to sub balance')
+  .option('--xa', 'Cross Balance target parent balancing group')
   .types({
-    string: ['allow', 'disallow','rawtx']
+    string: ['allow', 'disallow','rawtx','xa']
   })
   .action(cmd_balancing);
   
