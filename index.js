@@ -278,19 +278,19 @@ function delegates_balancing(args,callback,sko,node) {
 								var child_base = (parent_base_haben-parent_base_soll)*(-1);
 								var parent_base = child_base_haben-child_base_soll;
 										
-								if(parent!=child) {
+								if((parent!=child)||(parent_base!=child_base)) {
 									node.stromkonto(sko).then(function(skp) {
 										vorpal.log("X balance",parent-child,"/",parent_base-child_base);		
-										if(parent-child<0){
-												skp.addTx(global.blk,node.wallet.address,Math.abs(parent-child),Math.abs(parent_base-child_base)).then(function(tx) {
+										if((parent-child<0)||((parent_base-child_base<0)&&(parent-child==0))){
+												skp.addTx(global.blk,node.wallet.address,""+Math.abs(parent-child),""+Math.abs(parent_base-child_base)).then(function(tx) {
 													vorpal.log("TX",tx);	
 													if(typeof callback!="undefined") callback();
-												});
+												}).catch(function(e) {vorpal.log("ERROR",e);});
 											} else {
-												skp.addTx(node.wallet.address,global.blk,Math.abs(parent-child),Math.abs(parent_base-child_base)).then(function(tx) {
+												skp.addTx(node.wallet.address,global.blk,""+Math.abs(parent-child),""+Math.abs(parent_base-child_base)).then(function(tx) {
 													vorpal.log("TX",tx);	
 													if(typeof callback!="undefined") callback();
-												});
+												}).catch(function(e) {vorpal.log("ERROR",e);});
 											}				
 									});				
 								} else {
@@ -394,6 +394,27 @@ vorpal
 		}
 		callback();
 	});		
+});	
+
+vorpal
+  .command('receipts <filename>')    
+  .description("Exports transaction receipts as indexed json") 
+  .action(function (args, callback) {	
+	var storage = require("node-persist");
+	var fs = require("fs");
+	storage.initSync();
+	values=storage.keys();
+	var tmp = {};
+	
+	for (var k in values){
+		if (values.hasOwnProperty(k)) {			
+			if(values[k].length==66) {				
+				tmp[""+values[k]]=storage.getItemSync(""+values[k]);	
+				
+			}
+		}
+	}	
+	fs.writeFile(args.filename, JSON.stringify(tmp), 'utf8', function() {callback(); });		
 });	
 
 vorpal
