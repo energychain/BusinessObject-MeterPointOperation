@@ -8,5 +8,5 @@ PROJECT = "StromDAO Business Object"
 
 all: commit
 
-commit: ;git commit -a; git push;npm publish
+commit: ;cp node_modules/stromdao-businessobject/dist/loader.js stromkonto/;cp -R node_modules/stromdao-businessobject/smart_contracts/* stromkonto/abi/;git commit -a; git push;npm publish
 
