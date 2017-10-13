@@ -280,14 +280,21 @@ function delegates_balancing(args,callback,sko,node) {
 										
 								if((parent!=child)||(parent_base!=child_base)) {
 									node.stromkonto(sko).then(function(skp) {
-										vorpal.log("X balance",parent-child,"/",parent_base-child_base);		
+										vorpal.log("X balance",parent-child,"/",parent_base-child_base);	
+										
+										var saldo=parent-child;
+										var saldo_base=parent_base-child_base;
+										
+										if(((saldo<0)&&(saldo_base>0))||((saldo>0)&&(saldo_base<0))) {
+											saldo_base=0;											
+										}
 										if((parent-child<0)||((parent_base-child_base<0)&&(parent-child==0))){
-												skp.addTx(global.blk,node.wallet.address,""+Math.abs(parent-child),""+Math.abs(parent_base-child_base)).then(function(tx) {
+												skp.addTx(global.blk,node.wallet.address,""+Math.abs(saldo),""+Math.abs(saldo_base)).then(function(tx) {
 													vorpal.log("TX",tx);	
 													if(typeof callback!="undefined") callback();
 												}).catch(function(e) {vorpal.log("ERROR",e);});
 											} else {
-												skp.addTx(node.wallet.address,global.blk,""+Math.abs(parent-child),""+Math.abs(parent_base-child_base)).then(function(tx) {
+												skp.addTx(node.wallet.address,global.blk,""+Math.abs(saldo),""+Math.abs(saldo_base)).then(function(tx) {
 													vorpal.log("TX",tx);	
 													if(typeof callback!="undefined") callback();
 												}).catch(function(e) {vorpal.log("ERROR",e);});
@@ -376,7 +383,7 @@ vorpal
 	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
 	node.storage.setItemSync(node.wallet.address,args.meter_point_id);
 	node.stromkontoproxy(smart_contract_stromkonto).then(function(sko) {
-		sko.addTx(node.nodeWallet.address,node.wallet.address,args.Math.abs(amount),0).then(function(tx) {
+		sko.addTx(global.blk,node.wallet.address,args.Math.abs(amount),0).then(function(tx) {
 			callback();
 		});
 	});
