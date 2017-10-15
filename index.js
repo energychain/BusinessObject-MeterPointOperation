@@ -527,6 +527,31 @@ vorpal
 			callback();  
 		});
 	});    
+	
+vorpal
+  .command('webuser <meter_point_id>')
+  .option('-u --username <user>', 'Username')    
+  .option('-p --password <pass>', 'Password')
+  .description("Create a new webuser (or overwrite) with given credentials")    
+  .action(function (args, callback) {		  
+		var account_obj=new StromDAOBO.Account(args.options.username,args.options.password);
+		var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
+		account_obj.wallet().then(function(wallet) {
+				account_obj.encrypt(node.wallet.privateKey).then(function(enc) {
+					node.stringstoragefactory().then(function(ssf)  {						
+						ssf.build(enc).then(function(ss) {
+							var node = new StromDAOBO.Node({external_id:args.options.username,privateKey:wallet.privateKey,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
+							node.roleLookup().then(function(rl) {
+									rl.setRelation(256,ss).then(function(tx) {
+										vorpal.log("Webuser created",tx);
+										callback();
+									});
+							});
+						});
+					});							
+				});
+			});				
+	});    
 
 vorpal
   .command('list')  
