@@ -383,7 +383,7 @@ vorpal
 	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
 	node.storage.setItemSync(node.wallet.address,args.meter_point_id);
 	node.stromkontoproxy(smart_contract_stromkonto).then(function(sko) {
-		sko.addTx(global.blk,node.wallet.address,args.Math.abs(amount),0).then(function(tx) {
+		sko.addTx(global.blk,node.wallet.address,Math.abs(args.amount),0).then(function(tx) {
 			callback();
 		});
 	});
