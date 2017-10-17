@@ -381,9 +381,12 @@ vorpal
   .description("Add credit to Meter Point ledger.") 
   .action(function (args, callback) {	 
 	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	
-	node.storage.setItemSync(node.wallet.address,args.meter_point_id);
-	node.stromkontoproxy(smart_contract_stromkonto).then(function(sko) {
-		sko.addTx(global.blk,node.wallet.address,Math.abs(args.amount),0).then(function(tx) {
+	var creditor=node.wallet.address;
+	var node = new StromDAOBO.Node({external_id:"stromdao-mp",testMode:true,abilocation:"https://cdn.rawgit.com/energychain/StromDAO-BusinessObject/master/smart_contracts/"});	  
+	node.storage.setItemSync(creditor,args.meter_point_id);	
+	node.stromkontoproxy(smart_contract_stromkonto).then(function(sko) {				
+		sko.addTx(global.blk_address,creditor,Math.abs(args.amount),0).then(function(tx) {
+			vorpal.log(tx);
 			callback();
 		});
 	});
