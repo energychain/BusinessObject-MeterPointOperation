@@ -56,6 +56,12 @@ function ensureAllowedTx(extid) {
 
 function cmd_tokenize(args, callback,tkn) {	
 	vorpal.log("Meter Point Token",tkn);
+	if(typeof args.options.transfer != "undefined") {
+		if(args.options.transfer.length!=42) {
+			var node = new StromDAOBO.Node({external_id:args.options.transfer,testMode:true});	
+			args.options.transfer=node.wallet.address;
+		}		
+	}
 	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true});	
 	node.mptoken(tkn).then(function(t) {
 			t.issue().then(function(tx) {
@@ -66,6 +72,13 @@ function cmd_tokenize(args, callback,tkn) {
 								if((typeof args.options.transfer != "undefined")&&(typeof args.options.amount != "undefined")) {
 									token.transfer(args.options.transfer,args.options.amount).then(function(tx) {
 											vorpal.log("Transfer to ",args.options.transfer," Tokens ",args.options.amount,tx);
+											callback();
+									})
+								} else
+								if(typeof args.options.balance != "undefined") {
+									token.balanceOf(args.options.balance).then(function(bal2) {
+											vorpal.log("Balance of ",args.options.balance,bal2);
+											callback();
 									})
 								} else
 								callback();				
@@ -78,16 +91,38 @@ function cmd_tokenize(args, callback,tkn) {
 
 function cmd_set(args, callback,tkn) {	
 	vorpal.log("SET",tkn);
-	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true});
+	
 	if(typeof args.options.add != "undefined") {
+		if(args.options.add.length!=42) {
+			var node = new StromDAOBO.Node({external_id:args.options.add,testMode:true});
+			args.options.add=node.wallet.address;
+		}		
+		var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true});		
 		node.mpset(tkn).then(function(mpset) {
+				
 				mpset.addMeterPoint(args.options.add).then(function(tx) {
-						vorpal.log(tx.hash);
+						vorpal.log("Added",tx.hash);
 						callback();
 				});
 		});
-	} 
+	} else
+	if(typeof args.options.assign != "undefined") {
+		if(args.options.assign.length!=42) {
+			var node = new StromDAOBO.Node({external_id:args.options.assign,testMode:true});
+			args.options.assign=node.wallet.address;
+		}
+		var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true});
+		node.roleLookup().then(function(rl) {
+			rl.relations(args.options.assign,44).then(function(tx) {
+				rl.setRelation(44,tx).then(function(o) {
+					vorpal.log(o);								
+					callback();
+				});
+			});
+		});
+	} else
 	if(typeof args.options.list != "undefined") {
+		var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true});
 		node.mpset(tkn).then(function(mpset) {			
 						var j=10;
 						for(var i=0;i<j;i++) {
@@ -571,10 +606,11 @@ vorpal
 vorpal
   .command('tokenize <meter_point_id>')    
   .description("Derive digital asset (token) from Meter Point")  
+  .option('--balance <address>','Balance of address')
   .option('--transfer <address>','Transfer tokens to address')
   .option('--amount <tokens>','Quantity of tokens to transfer')
    .types({
-    string: ['transfer']
+    string: ['transfer','balance']
   })
   .action(ensureToken);
 
@@ -583,8 +619,9 @@ vorpal
   .description("Creat and link a of addresses set to MP")  
   .option('--list','List addesses in set')
   .option('--add <address>','Add address to set')
+  .option('--assign <address>','Assign a given SET to a different MP')
    .types({
-    string: ['add']
+    string: ['add','assign']
   })
   .action(ensureSet);
  
@@ -656,7 +693,7 @@ vorpal
 						ssf.build(enc).then(function(ss) {
 							var node = new StromDAOBO.Node({external_id:args.options.username,privateKey:wallet.privateKey,testMode:true});	
 							node.roleLookup().then(function(rl) {
-									rl.setRelation(256,ss).then(function(tx) {
+									rl.setRelation(222,ss).then(function(tx) {
 										vorpal.log("Webuser created",tx);
 										callback();
 									});
