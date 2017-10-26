@@ -718,10 +718,10 @@ vorpal
 													for (var k in values){
 														if (values.hasOwnProperty(k)) {			
 															if(values[k].substr(0,"address_".length)=="address_") {				
-																tmp[""+values[k]]=storage.getItemSync(""+values[k]);																	
+																tmp[""+values[k].toLowerCase()]=storage.getItemSync(""+values[k]);																	
 															}
 															if(values[k].substr(0,"name_".length)=="name_") {				
-																tmp[""+values[k]]=storage.getItemSync(""+values[k]);																	
+																tmp[""+values[k].toLowerCase()]=storage.getItemSync(""+values[k]);																	
 															}
 														}
 													}	
