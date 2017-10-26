@@ -446,7 +446,9 @@ function delegates_balancing(args,callback,sko,node) {
 		callback();	
 	}
 }
-function cmd_balancing(args, callback) {
+
+
+function ensure_balancing(args,callback,callback2) {
 	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true});	  
 	node.roleLookup().then(function(rl) {
 			rl.relations(node.wallet.address,42).then(function(tx) {
@@ -454,7 +456,7 @@ function cmd_balancing(args, callback) {
 					node.stromkontoproxyfactory().then(function(skof) {
 							skof.build().then(function(sko) {
 									rl.setRelation(42,sko).then(function(sr) {
-											delegates_balancing(args,callback,sko,node);											
+											callback2(args,callback,sko,node);											
 											
 									});
 							});
@@ -464,7 +466,11 @@ function cmd_balancing(args, callback) {
 				}				
 			});
 		});		
- }		
+}
+function cmd_balancing(args, callback) {
+		ensure_balancing(args,callback,delegates_balancing);
+}		
+ 
 vorpal
   .command('retrieve <meter_point_id>')    
   .description("Retrieves Meter Point Reading for given external Meter Point ID.") 
@@ -684,7 +690,8 @@ vorpal
   .option('-u --username <user>', 'Username')    
   .option('-p --password <pass>', 'Password')
   .description("Create a new webuser (or overwrite) with given credentials")    
-  .action(function (args, callback) {		  
+  .action(function (args, callback) {	
+	  ensure_balancing(args,callback,function() {
 		var account_obj=new StromDAOBO.Account(args.options.username,args.options.password);
 		var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true});	
 		account_obj.wallet().then(function(wallet) {
@@ -701,7 +708,8 @@ vorpal
 						});
 					});							
 				});
-			});				
+			});	
+		});	  			
 	});    
 
 vorpal
