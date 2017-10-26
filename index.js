@@ -465,7 +465,7 @@ function ensure_balancing(args,callback,callback2) {
 							});
 					});
 				} else {
-					delegates_balancing(args,callback,tx,node);			
+					callback2(args,callback,tx,node);			
 				}				
 			});
 		});		
@@ -692,10 +692,10 @@ vorpal
   .command('webuser <meter_point_id>')
   .option('-u --username <user>', 'Username')    
   .option('-p --password <pass>', 'Password')
-  .option('-f --file <filename>', 'Optional Filename for Profile Storage')
+  .option('--file <filename>', 'Optional Filename for Profile Storage')
   .description("Create a new webuser (or overwrite) with given credentials")    
   .action(function (args, callback) {	
-	  ensure_balancing(args,callback,function() {
+	  ensure_balancing(args,callback,function() {		  
 		var account_obj=new StromDAOBO.Account(args.options.username,args.options.password);
 		var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true});	
 		account_obj.wallet().then(function(wallet) {
@@ -705,8 +705,33 @@ vorpal
 							var node = new StromDAOBO.Node({external_id:args.options.username,privateKey:wallet.privateKey,testMode:true});	
 							node.roleLookup().then(function(rl) {
 									rl.setRelation(222,ss).then(function(tx) {
-										vorpal.log("Webuser created",tx);
+										vorpal.log("Webuser created",tx);									
+										// Dump Profile
+										if(typeof args.options.file != "undefined") {
+												
+													var storage = require("node-persist");
+													var fs = require("fs");
+													storage.initSync();
+													values=storage.keys();
+													var tmp = {};
+													
+													for (var k in values){
+														if (values.hasOwnProperty(k)) {			
+															if(values[k].substr(0,"address_".length)=="address_") {				
+																tmp[""+values[k]]=storage.getItemSync(""+values[k]);																	
+															}
+															if(values[k].substr(0,"name_".length)=="name_") {				
+																tmp[""+values[k]]=storage.getItemSync(""+values[k]);																	
+															}
+														}
+													}	
+													fs.writeFile(args.options.file, JSON.stringify(tmp), 'utf8', function() {
+														vorpal.log("Profile File written");
+														callback(); 
+														});	
+										} else {										
 										callback();
+										}
 									});
 							});
 						});
