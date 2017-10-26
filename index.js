@@ -361,10 +361,13 @@ function delegates_balancing(args,callback,sko,node) {
 				vorpal.log("ERROR: Wrong transaction format");
 				callback();
 		} else {
-			node.stromkonto(sko).then(function(skp) {			
+			node.stromkonto(sko).then(function(skp) {					
 				skp.addTx(tx[0],tx[1],tx[2],tx[3]).then(function(tx) {
 					vorpal.log("TX",tx);	
 					callback();
+				}).catch(function(e) {
+						vorpal.log("ERROR",e);
+						callback();
 				});	
 			});		
 		}
@@ -689,6 +692,7 @@ vorpal
   .command('webuser <meter_point_id>')
   .option('-u --username <user>', 'Username')    
   .option('-p --password <pass>', 'Password')
+  .option('-f --file <filename>', 'Optional Filename for Profile Storage')
   .description("Create a new webuser (or overwrite) with given credentials")    
   .action(function (args, callback) {	
 	  ensure_balancing(args,callback,function() {
