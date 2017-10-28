@@ -99,7 +99,7 @@ function cmd_cutokenize(args, callback,tkn) {
 	}
 	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true});	
 	node.cutoken(tkn).then(function(t) {
-			t.issue().then(function(tx) {
+			
 					t.totalSupply().then(function(ts) {
 						vorpal.log("Total Issued",ts);
 						if(typeof args.options.add != "undefined") {
@@ -113,15 +113,19 @@ function cmd_cutokenize(args, callback,tkn) {
 									vorpal.log("Balance of ",args.options.balance,bal2);
 									callback();
 							})
-						} else	{									
+						} else	
+						if(typeof args.options.issue != "undefined") {
+							t.issue().then(function(tx) {
+									vorpal.log("Issued ",tx);
+									callback();
+							});
+						} else {									
 							t.balanceOf(node.wallet.address).then(function(bal) {
 									vorpal.log("Self Holds",bal);								
 									callback();										
 							});					
 						}
-					});			
-							
-			});
+					});													
 	});	
 }
 
@@ -700,6 +704,7 @@ vorpal
   .description("Derive digital utilization asset (token) from Meter Point")  
   .option('--balance <address>','Balance of address')  
   .option('--add <address>','Add Meterpoint to capacity utilization')  
+  .option('--issue','Updates/Issues tokens based on last source reading')
    .types({
     string: ['add','balance']
   })
