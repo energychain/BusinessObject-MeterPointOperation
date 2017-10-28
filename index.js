@@ -89,8 +89,44 @@ function cmd_tokenize(args, callback,tkn) {
 	});	
 }
 
+function cmd_cutokenize(args, callback,tkn) {	
+	vorpal.log("CU Token",tkn);
+	if(typeof args.options.transfer != "undefined") {
+		if(args.options.transfer.length!=42) {
+			var node = new StromDAOBO.Node({external_id:args.options.transfer,testMode:true});	
+			args.options.transfer=node.wallet.address;
+		}		
+	}
+	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true});	
+	node.cutoken(tkn).then(function(t) {
+			t.issue().then(function(tx) {
+					t.totalSupply().then(function(ts) {
+						vorpal.log("Total Issued",ts);
+						if(typeof args.options.add != "undefined") {
+							t.addMeterpoint(args.options.add).then(function(bal2) {
+									vorpal.log("Added ",args.options.add,bal2);
+									callback();
+							})
+						} else	
+						if(typeof args.options.balance != "undefined") {
+							t.balanceOf(args.options.balance).then(function(bal2) {
+									vorpal.log("Balance of ",args.options.balance,bal2);
+									callback();
+							})
+						} else	{									
+							t.balanceOf(node.wallet.address).then(function(bal) {
+									vorpal.log("Self Holds",bal);								
+									callback();										
+							});					
+						}
+					});			
+							
+			});
+	});	
+}
+
 function cmd_set(args, callback,tkn) {	
-	vorpal.log("SET",tkn);
+	vorpal.log("Set",tkn);
 	
 	if(typeof args.options.add != "undefined") {
 		if(args.options.add.length!=42) {
@@ -123,18 +159,54 @@ function cmd_set(args, callback,tkn) {
 	} else
 	if(typeof args.options.list != "undefined") {
 		var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true});
-		node.mpset(tkn).then(function(mpset) {			
+		node.mpset(tkn).then(function(mpset) {		
+						var mps=[];
+				
 						var j=10;
 						for(var i=0;i<j;i++) {
-								mpset.meterpoints(i).then(function(mp) {
-									vorpal.log(mp);
-									j++;
-								}).catch(function(e) {});
+							mps.push(new Promise(function(res3,rej3) {							
+							mpset.meterpoints(i).then(function(mp) {
+								res3(mp);
+							}).catch(function(e) {res3();});									
+						}));
 						}
-					
+						
+						Promise.all(mps).then(function(values) {
+							var mps=[];
+							for(var i=0;i<values.length;i++) {
+								if(typeof values[i] != "undefined") {
+									mps.push(values[i]);
+								}						
+							}
+							vorpal.log(mps);
+							callback();
+						});
 				
 		});
 	} else { callback(); }
+}
+
+
+function ensureCUToken(args,callback) {	
+	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true});	
+
+	node.roleLookup().then(function(rl) {
+			var tk="0x0000000000000000000000000000000000000000";			
+			rl.relations(node.wallet.address,45).then(function(tx) {								
+				if(tx!="0x0000000000000000000000000000000000000000") {				
+					cmd_cutokenize(args,callback,tx);
+				} else {																		
+					node.cutokenfactory("0xf0AF273DA2aBdFac56B3760F527d4Dd515968bab").then( function(ssf) {							
+							ssf.build("0x0000000000000000000000000000000000000008",node.wallet.address).then( function(tx_result) {					
+							vorpal.log("New CUToken",tx_result);
+							rl.setRelation(45,tx_result).then(function(o) {								
+								cmd_cutokenize(args,callback,tx_result);	
+							});
+						});
+					});						
+				}
+			});
+	});	
 }
 
 function ensureToken(args,callback) {
@@ -622,6 +694,16 @@ vorpal
     string: ['transfer','balance']
   })
   .action(ensureToken);
+  
+vorpal
+  .command('cutokenize <meter_point_id>')    
+  .description("Derive digital utilization asset (token) from Meter Point")  
+  .option('--balance <address>','Balance of address')  
+  .option('--add <address>','Add Meterpoint to capacity utilization')  
+   .types({
+    string: ['add','balance']
+  })
+  .action(ensureCUToken);
 
 vorpal
   .command('set <meter_point_id>')    
