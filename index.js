@@ -98,14 +98,19 @@ function cmd_cutokenize(args, callback,tkn) {
 		}		
 	}
 	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true});	
-	node.cutoken(tkn).then(function(t) {
-			
+	node.cutoken(tkn).then(function(t) {			
 					t.totalSupply().then(function(ts) {
 						vorpal.log("Total Issued",ts);
 						if(typeof args.options.add != "undefined") {
 							t.addMeterpoint(args.options.add).then(function(bal2) {
 									vorpal.log("Added ",args.options.add,bal2);
-									callback();
+									var node = new StromDAOBO.Node({external_id:args.options.add,testMode:true});
+									node.roleLookup().then(function(rl) {
+										rl.setRelation(45,tkn).then(function(o) {	
+											vorpal.log("Assigned");
+											callback();	
+										});
+									});
 							})
 						} else	
 						if(typeof args.options.balance != "undefined") {

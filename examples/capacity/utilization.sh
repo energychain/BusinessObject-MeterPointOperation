@@ -45,3 +45,8 @@ stromdao cutokenize --balance mieter2 objekt
 # TotalSupply: 200
 # Mieter1: 100
 # Mieter2: 100
+
+# Clearing von Zählern...
+echo "--- Settlement and Clearing"
+stromdao store -f settlement_capacity.js mieter1 66
+stromdao store -f settlement_capacity.js mieter2 86
