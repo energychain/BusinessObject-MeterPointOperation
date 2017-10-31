@@ -12,15 +12,16 @@ global.promise = new Promise(function(resolve2, reject2) {
 								ct.balanceOf(settlement.account).then(function(bal) {
 									cost*=bal/ts;
 									base*=bal/ts;
+									
+									// Anteil am Gesamt Verbrauch des TKN Owners									
+									// Dieser Anteil muss von der Balance des TKN abgezogen werden. 
+									
+									
 									sko.addTx(settlement.account,settlement.node_account,Math.round(cost),Math.round(base)).then(function(tx) {
-										console.log("TX",tx);		
-										console.log("From:",settlement.account);
-										console.log("To:",settlement.node_account);
-										console.log("Amount:",(Math.round(cost)/10000000).toFixed(6));
-										console.log("Base:",base*1);	
-									resolve2(tx);
-								});								
-							});
+										console.log(settlement.account,settlement.node_account,Math.round(cost),Math.round(base));	
+										resolve2(tx);
+									});								
+								});
 						});
 					});
 				});				

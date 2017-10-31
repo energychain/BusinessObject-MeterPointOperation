@@ -9,16 +9,16 @@ stromdao store mieter2 1
 
 echo "--- Tokenizing to Starting point"
 stromdao cutokenize objekt
-stromdao store objekt 100
+stromdao store -f settlement_generation.js objekt 10
 stromdao cutokenize --add mieter1 objekt
 stromdao cutokenize --add mieter2 objekt
 stromdao cutokenize --issue objekt
 
 # Zeit vergeht... neue Zählerstände
 echo "--- Adding more readings"
-stromdao store objekt 120
-stromdao store mieter1 3
-stromdao store mieter2 2
+stromdao store -f settlement_generation.js objekt 20
+stromdao store mieter1 30
+stromdao store mieter2 20
 stromdao cutokenize --issue objekt
 
 # Prüfen der Verteilung
@@ -26,27 +26,17 @@ echo "--- Retrieve Issued Tokens"
 stromdao cutokenize --balance mieter1 objekt
 stromdao cutokenize --balance mieter2 objekt
 
-# Erwartetes Ergebnis
-# TotalSupply: 60
-# Mieter1: 40
-# Mieter2: 20
-
 echo "--- Adding more readings"
-stromdao store objekt 140
-stromdao store mieter1 6
-stromdao store mieter2 6
+stromdao store -f settlement_generation.js objekt 30
+stromdao store mieter1 60
+stromdao store mieter2 60
 stromdao cutokenize --issue objekt
 
 echo "--- Retrieve Issued Tokens"
 stromdao cutokenize --balance mieter1 objekt
 stromdao cutokenize --balance mieter2 objekt
 
-# Erwartetes Ergebnis
-# TotalSupply: 200
-# Mieter1: 100
-# Mieter2: 100
-
 # Clearing von Zählern...
 echo "--- Settlement and Clearing"
-stromdao store -f settlement_capacity.js mieter1 66
-stromdao store -f settlement_capacity.js mieter2 86
+stromdao store -f settlement_capacity.js mieter1 100
+stromdao store -f settlement_capacity.js mieter2 100

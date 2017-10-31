@@ -120,10 +120,24 @@ function cmd_cutokenize(args, callback,tkn) {
 							})
 						} else	
 						if(typeof args.options.issue != "undefined") {
-							t.issue().then(function(tx) {
-									vorpal.log("Issued ",tx);
-									callback();
+							// Only issue if newer Readings !CONSENS!
+							t.obj.source().then(function(o) {
+								console.log("MPDelta ",o[0]);
+								node.mpdelta(o[0]).then(function(mpdelta) {									
+									mpdelta.lastReadingTime().then(function(lrt) {
+										var token_lrt=lrt[0].toString());
+										
+										
+												t.issue().then(function(tx) {
+													vorpal.log("Issued ",tx);
+													callback();
+												});
+												
+										
+									});
+								}).catch(function(e) {console.log("ER",e);});
 							});
+							
 						} else {									
 							t.balanceOf(node.wallet.address).then(function(bal) {
 									vorpal.log("Self Holds",bal);								
