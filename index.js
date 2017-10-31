@@ -125,7 +125,7 @@ function cmd_cutokenize(args, callback,tkn) {
 								console.log("MPDelta ",o[0]);
 								node.mpdelta(o[0]).then(function(mpdelta) {									
 									mpdelta.lastReadingTime().then(function(lrt) {
-										var token_lrt=lrt[0].toString());
+										var token_lrt=lrt[0].toString();
 										
 										
 												t.issue().then(function(tx) {

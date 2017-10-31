@@ -2,7 +2,7 @@ global.promise = new Promise(function(resolve2, reject2) {
 	node.stromkontoproxy(global.smart_contract_stromkonto).then(function(sko) {
 		
 			// Assume 1 KWh = 0,10 €
-			var cost= settlement.base*100000;
+			var cost= settlement.base*120000;
 			var base= settlement.base;
 			
 			node.roleLookup().then(function(rl) {
