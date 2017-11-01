@@ -212,15 +212,16 @@ function cmd_set(args, callback,tkn) {
 
 function ensureCUToken(args,callback) {	
 	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true});	
-
+	
 	node.roleLookup().then(function(rl) {
 			var tk="0x0000000000000000000000000000000000000000";			
 			rl.relations(node.wallet.address,45).then(function(tx) {								
 				if(tx!="0x0000000000000000000000000000000000000000") {				
 					cmd_cutokenize(args,callback,tx);
 				} else {																		
-					node.cutokenfactory("0xf0AF273DA2aBdFac56B3760F527d4Dd515968bab").then( function(ssf) {							
-							ssf.build("0x0000000000000000000000000000000000000008",node.wallet.address).then( function(tx_result) {					
+					
+					node.cutokenfactory("0xf0AF273DA2aBdFac56B3760F527d4Dd515968bab").then( function(ssf) {													
+							ssf.build("0x0000000000000000000000000000000000000008",node.wallet.address).then( function(tx_result) {													
 							vorpal.log("New CUToken",tx_result);
 							rl.setRelation(45,tx_result).then(function(o) {								
 								cmd_cutokenize(args,callback,tx_result);	
