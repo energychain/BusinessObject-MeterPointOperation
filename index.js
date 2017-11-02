@@ -44,10 +44,16 @@ function ensureAllowedTx(extid) {
 		if(node.storage.getItemSync("managed_"+extid)==null) {
 				managed_meters.push(extid);
 				node.storage.setItemSync("managed_meters",JSON.stringify(managed_meters));	
-				node.storage.setItemSync("managed_"+extid,sender);				
+				node.storage.setItemSync("managed_"+extid,sender);	
+				node.stromkontoproxy().then(function(skop) {
+						skop.modifySender(sender,true).then(function(tx) {
+								vorpal.log("Mandated ",extid,tx);	
+								resolve("mandated");						
+						});
+				});			
+		} else {
+			resolve("mandated");	
 		}
-		
-		resolve("mandated");
 	});
 	return p1;
 }
@@ -126,8 +132,6 @@ function cmd_cutokenize(args, callback,tkn) {
 								node.mpdelta(o[0]).then(function(mpdelta) {									
 									mpdelta.lastReadingTime().then(function(lrt) {
 										var token_lrt=lrt[0].toString();
-										
-										
 												t.issue().then(function(tx) {
 													vorpal.log("Issued ",tx);
 													callback();
