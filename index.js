@@ -263,7 +263,7 @@ function ensureSet(args,callback) {
 	node.roleLookup().then(function(rl) {
 			var tk="0x0000000000000000000000000000000000000000";			
 			rl.relations(node.wallet.address,44).then(function(tx) {			
-				if(tx!="0x0000000000000000000000000000000000000000") {				
+				if((tx!="0x0000000000000000000000000000000000000000")&&(typeof args.options.reset != "undefined")) {				
 					cmd_set(args,callback,tx);
 				} else {									
 					node.mpsetfactory().then(function(mptf) {
@@ -740,6 +740,7 @@ vorpal
   .option('--list','List addesses in set')
   .option('--add <address>','Add address to set')
   .option('--assign <address>','Assign a given SET to a different MP')
+  .option('--reset','Sets a new MP Set (empty old if exists)')
    .types({
     string: ['add','assign']
   })
