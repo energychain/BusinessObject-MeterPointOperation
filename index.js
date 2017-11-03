@@ -263,7 +263,7 @@ function ensureSet(args,callback) {
 	node.roleLookup().then(function(rl) {
 			var tk="0x0000000000000000000000000000000000000000";			
 			rl.relations(node.wallet.address,44).then(function(tx) {			
-				if((tx!="0x0000000000000000000000000000000000000000")&&(typeof args.options.reset != "undefined")) {				
+				if((tx!="0x0000000000000000000000000000000000000000")&&(typeof args.options.reset == "undefined")) {				
 					cmd_set(args,callback,tx);
 				} else {									
 					node.mpsetfactory().then(function(mptf) {
