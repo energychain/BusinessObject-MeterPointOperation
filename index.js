@@ -324,6 +324,7 @@ function cmd_store(args, callback) {
 				if(typeof args.options.f != "undefined") {
 					settlement_js = fs.readFileSync( args.options.f);
 				}
+
 				if(typeof args.options.de != "undefined") {
 					try {
 						settlement.tarif = JSON.parse(srequest('GET',"https://fury.network/tarifs/de/"+args.options.de+"").body.toString());	
@@ -349,7 +350,12 @@ function cmd_store(args, callback) {
 				settlement.account=node.wallet.address;
 				settlement.node_account=global.blk_address;
 				settlement.node_wallet=node.nodeWallet.address;
-				
+				if(typeof args.options.workprice != "undefined") {
+						var to=settlement.node_account;
+						var from=settlement.account;
+						if(args.options.workprice<0)  { from=settlement.node_account; to=settlement.account; } 
+						settlement_js="global.promise = new Promise(function(resolve2,reject2) { node.stromkontoproxy(global.smart_contract_stromkonto).then(function(sko) {	sko.addTx("+from+","+to+","+Math.abs(Math.round(args.options.workprice))+",settlement.base).then(function(tx) {	resolve2(tx);});});});";
+				}
 				mpo.readings(node.wallet.address).then( function(start_reading) {
 					settlement.start=start_reading;		
 					if(start_reading.power>args.reading) {
@@ -421,6 +427,7 @@ vorpal
   .option('--bx','Performs cross balancing after commit (eq. to balancing -x command)')
   .option('--de <zipcode>','Add tarif for zipcode (Germany)')
   .option('--auto <zipcode>','Auto settle to dev/testing ledger (only Germany)')
+  .option('--workprice','Defines a workprice for settlement (or earning if negative)');
   .action(cmd_store);	
 
 function cmd_retrieve(args, callback) {	 
