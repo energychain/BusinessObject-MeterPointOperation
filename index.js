@@ -350,6 +350,9 @@ function cmd_store(args, callback) {
 				settlement.account=node.wallet.address;
 				settlement.node_account=global.blk_address;
 				settlement.node_wallet=node.nodeWallet.address;
+				if(typeof args.options.credit != "undefined") {
+					args.options.workprice=args.options.workprice*(-1);
+				}
 				if(typeof args.options.workprice != "undefined") {
 						var to=settlement.node_account;
 						var from=settlement.account;
@@ -428,6 +431,7 @@ vorpal
   .option('--de <zipcode>','Add tarif for zipcode (Germany)')
   .option('--auto <zipcode>','Auto settle to dev/testing ledger (only Germany)')
   .option('--workprice <priceperkwh>','Defines a workprice for settlement (or earning if negative)')
+  .option('--credit','Defines a workprice to be credit')
   .action(cmd_store);	
 
 function cmd_retrieve(args, callback) {	 
