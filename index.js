@@ -427,7 +427,7 @@ vorpal
   .option('--bx','Performs cross balancing after commit (eq. to balancing -x command)')
   .option('--de <zipcode>','Add tarif for zipcode (Germany)')
   .option('--auto <zipcode>','Auto settle to dev/testing ledger (only Germany)')
-  .option('--workprice','Defines a workprice for settlement (or earning if negative)');
+  .option('--workprice','Defines a workprice for settlement (or earning if negative)')
   .action(cmd_store);	
 
 function cmd_retrieve(args, callback) {	 
