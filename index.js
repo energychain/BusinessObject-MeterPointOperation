@@ -565,19 +565,25 @@ function delegates_balancing(args,callback,sko,node) {
 function ensure_balancing(args,callback,callback2) {
 	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true});	  
 	node.roleLookup().then(function(rl) {
-			rl.relations(node.wallet.address,42).then(function(tx) {
-				if(tx=="0x0000000000000000000000000000000000000000") {
-					node.stromkontoproxyfactory().then(function(skof) {
-							skof.build().then(function(sko) {
-									rl.setRelation(42,sko).then(function(sr) {
-											callback2(args,callback,sko,node);											
-											
-									});
-							});
+			rl.relations(node.wallet.address,42).then(function(tx) {				
+				if(typeof args.options.b != "undefined") {
+					rl.setRelation(42,global.smart_contract_stromkonto).then(function(sr) {
+						callback2(args,callback,global.smart_contract_stromkonto,node);																							
 					});
 				} else {
-					callback2(args,callback,tx,node);			
-				}				
+					if(tx=="0x0000000000000000000000000000000000000000") {
+						node.stromkontoproxyfactory().then(function(skof) {
+								skof.build().then(function(sko) {
+										rl.setRelation(42,sko).then(function(sr) {
+												callback2(args,callback,sko,node);											
+												
+										});
+								});
+						});
+					} else {
+						callback2(args,callback,tx,node);			
+					}		
+				}		
 			});
 		});		
 }
@@ -815,6 +821,7 @@ vorpal
   .command('webuser <meter_point_id>')
   .option('-u --username <user>', 'Username')    
   .option('-p --password <pass>', 'Password')
+  .option('-b','Set Balance Group to Node')
   .option('--file <filename>', 'Optional Filename for Profile Storage')
   .description("Create a new webuser (or overwrite) with given credentials")    
   .action(function (args, callback) {	
