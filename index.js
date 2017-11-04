@@ -357,7 +357,7 @@ function cmd_store(args, callback) {
 						var to=settlement.node_account;
 						var from=settlement.account;
 						if(args.options.workprice<0)  { from=settlement.node_account; to=settlement.account; } 
-						settlement_js="global.promise = new Promise(function(resolve2,reject2) { node.stromkontoproxy(global.smart_contract_stromkonto).then(function(sko) { sko.addTx("+from+","+to+",Math.abs(Math.round("+args.options.workprice+"*(settlement.base/1000))),settlement.base).then(function(tx) {	resolve2(tx);});});});";
+						settlement_js="global.promise = new Promise(function(resolve2,reject2) { node.stromkontoproxy(global.smart_contract_stromkonto).then(function(sko) { sko.addTx('"+from+"','"+to+"',Math.abs(Math.round("+args.options.workprice+"*(settlement.base/1000))),settlement.base).then(function(tx) {	console.log('AddTx','"+from+"','"+to+"',Math.abs(Math.round("+args.options.workprice+"*(settlement.base/1000))),settlement.base,tx); resolve2(tx);});});});";							
 				}
 				mpo.readings(node.wallet.address).then( function(start_reading) {
 					settlement.start=start_reading;		
