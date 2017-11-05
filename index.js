@@ -816,7 +816,18 @@ vorpal
 			callback();  
 		});
 	});    
-	
+vorpal
+  .command('infrastructure <infrastructure_node> <meter_point>')
+  .description("Assigns Infrastructure Node to Meter Point (Role 10)")    
+  .action(function (args, callback) {		  
+		var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true});	
+		node.roleLookup().then(function(rl) {
+			rl.setRelation(10,args.infrastructure_node).then(function(x) {		
+				vorpal.log(x);
+			});
+		});
+	}); 
+		
 vorpal
   .command('webuser <meter_point_id>')
   .option('-u --username <user>', 'Username')    
