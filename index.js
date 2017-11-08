@@ -824,6 +824,7 @@ vorpal
 		node.roleLookup().then(function(rl) {
 			rl.setRelation(10,args.infrastructure_node).then(function(x) {		
 				vorpal.log(x);
+				callback();
 			});
 		});
 	}); 
@@ -833,6 +834,7 @@ vorpal
   .option('-u --username <user>', 'Username')    
   .option('-p --password <pass>', 'Password')
   .option('-b','Set Balance Group to Node')
+  .option('--ui <ipfshash>','File to link as UI Profile')
   .option('--file <filename>', 'Optional Filename for Profile Storage')
   .description("Create a new webuser (or overwrite) with given credentials")    
   .action(function (args, callback) {	
@@ -872,8 +874,25 @@ vorpal
 																vorpal.log("Profile File written");
 																callback(); 
 																});	
-												} else {										
-												callback();
+												} else 
+												if(typeof args.options.ui != "undefined") {								
+													//var ui_profile=fs.readFileSync(arg.options.ui);
+													account_obj.encrypt(args.options.ui).then(function(enc_profile) {
+															// IPFS Wrapper here
+															node.stringstoragefactory().then(function(ssf)  {						
+																ssf.build(enc_profile).then(function(ss) {
+																	node.roleLookup().then(function(rl) {
+																		rl.setRelation(11,ss).then(function(tx) {
+																			vorpal.log("UI Profile set");
+																			callback();
+																		});
+																	});
+																});
+															});
+													});
+													
+												} else {
+													callback();	
 												}
 											});
 									});
