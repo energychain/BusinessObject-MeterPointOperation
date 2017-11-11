@@ -475,10 +475,13 @@ function delegates_balancing(args,callback,sko,node) {
 			node.stromkonto(sko).then(function(skp) {					
 				skp.balancesSoll(tx[0]).then(function(soll) {
 						vorpal.log("Pre Soll",tx[0],soll);
-						skp.addTx(tx[0],tx[1],tx[2],tx[3]).then(function(tx) {
-							vorpal.log("TX",tx);	
+						skp.addTx(tx[0],tx[1],tx[2],tx[3]).then(function(rx) {
+							vorpal.log("TX",rx);	
 							skp.balancesSoll(tx[0]).then(function(soll) {
 								vorpal.log("Post Soll",tx[0],soll);
+								callback();
+							}).catch(function(e) {
+								vorpal.log("ERROR2",e);
 								callback();
 							});							
 						}).catch(function(e) {
