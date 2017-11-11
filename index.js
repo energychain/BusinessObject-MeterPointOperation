@@ -471,15 +471,23 @@ function delegates_balancing(args,callback,sko,node) {
 		if(tx.length<4) {
 				vorpal.log("ERROR: Wrong transaction format");
 				callback();
-		} else {
+		} else {			
 			node.stromkonto(sko).then(function(skp) {					
-				skp.addTx(tx[0],tx[1],tx[2],tx[3]).then(function(tx) {
-					vorpal.log("TX",tx);	
-					callback();
-				}).catch(function(e) {
-						vorpal.log("ERROR",e);
-						callback();
-				});	
+				skp.balancesSoll(tx[0]).then(function(soll) {
+						vorpal.log("Pre Soll",tx[0],soll);
+						skp.addTx(tx[0],tx[1],tx[2],tx[3]).then(function(tx) {
+							vorpal.log("TX",tx);	
+							skp.balancesSoll(tx[0]).then(function(soll) {
+								vorpal.log("Post Soll",tx[0],soll);
+								callback();
+							});							
+						}).catch(function(e) {
+								vorpal.log("ERROR",e);
+								callback();
+						});	
+						
+				});
+				
 			});		
 		}
 	} else
