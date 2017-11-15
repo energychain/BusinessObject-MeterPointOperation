@@ -33,10 +33,10 @@ var StromDAOBO = require("stromdao-businessobject");
 
 function ensureAllowedTx(extid) {	
 	var p1 = new Promise(function(resolve, reject) {
-		var node = new StromDAOBO.Node({external_id:extid,testMode:true});
+		var node = new StromDAOBO.Node({external_id:extid,testMode:true,rpc:global.rpcprovider});
 		var sender=node.wallet.address;
 		
-		var node = new StromDAOBO.Node({external_id:"stromdao-mp",testMode:true});	  
+		var node = new StromDAOBO.Node({external_id:"stromdao-mp",testMode:true,rpc:global.rpcprovider});	  
 		var managed_meters= node.storage.getItemSync("managed_meters");
 		
 		if(managed_meters==null) managed_meters=[]; else managed_meters=JSON.parse(managed_meters);
@@ -64,11 +64,11 @@ function cmd_tokenize(args, callback,tkn) {
 	vorpal.log("Meter Point Token",tkn);
 	if(typeof args.options.transfer != "undefined") {
 		if(args.options.transfer.length!=42) {
-			var node = new StromDAOBO.Node({external_id:args.options.transfer,testMode:true});	
+			var node = new StromDAOBO.Node({external_id:args.options.transfer,testMode:true,rpc:global.rpcprovider});	
 			args.options.transfer=node.wallet.address;
 		}		
 	}
-	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true});	
+	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,rpc:global.rpcprovider});	
 	node.mptoken(tkn).then(function(t) {
 			t.issue().then(function(tx) {
 					t.power_token().then(function(pt) {
@@ -99,18 +99,18 @@ function cmd_cutokenize(args, callback,tkn) {
 	vorpal.log("CU Token",tkn);
 	if(typeof args.options.transfer != "undefined") {
 		if(args.options.transfer.length!=42) {
-			var node = new StromDAOBO.Node({external_id:args.options.transfer,testMode:true});	
+			var node = new StromDAOBO.Node({external_id:args.options.transfer,testMode:true,rpc:global.rpcprovider});	
 			args.options.transfer=node.wallet.address;
 		}		
 	}
-	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true});	
+	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,rpc:global.rpcprovider});	
 	node.cutoken(tkn).then(function(t) {			
 					t.totalSupply().then(function(ts) {
 						vorpal.log("Total Issued",ts);
 						if(typeof args.options.add != "undefined") {
 							t.addMeterpoint(args.options.add).then(function(bal2) {
 									vorpal.log("Added ",args.options.add,bal2);
-									var node = new StromDAOBO.Node({external_id:args.options.add,testMode:true});
+									var node = new StromDAOBO.Node({external_id:args.options.add,testMode:true,rpc:global.rpcprovider});
 									node.roleLookup().then(function(rl) {
 										rl.setRelation(45,tkn).then(function(o) {	
 											vorpal.log("Assigned");
@@ -157,10 +157,10 @@ function cmd_set(args, callback,tkn) {
 	
 	if(typeof args.options.add != "undefined") {
 		if(args.options.add.length!=42) {
-			var node = new StromDAOBO.Node({external_id:args.options.add,testMode:true});
+			var node = new StromDAOBO.Node({external_id:args.options.add,testMode:true,rpc:global.rpcprovider});
 			args.options.add=node.wallet.address;
 		}		
-		var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true});		
+		var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,rpc:global.rpcprovider});		
 		node.mpset(tkn).then(function(mpset) {
 				
 				mpset.addMeterPoint(args.options.add).then(function(tx) {
@@ -171,10 +171,10 @@ function cmd_set(args, callback,tkn) {
 	} else
 	if(typeof args.options.assign != "undefined") {
 		if(args.options.assign.length!=42) {
-			var node = new StromDAOBO.Node({external_id:args.options.assign,testMode:true});
+			var node = new StromDAOBO.Node({external_id:args.options.assign,testMode:true,rpc:global.rpcprovider});
 			args.options.assign=node.wallet.address;
 		}
-		var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true});
+		var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,rpc:global.rpcprovider});
 		node.roleLookup().then(function(rl) {
 			rl.relations(args.options.assign,44).then(function(tx) {
 				rl.setRelation(44,tx).then(function(o) {
@@ -185,7 +185,7 @@ function cmd_set(args, callback,tkn) {
 		});
 	} else
 	if(typeof args.options.list != "undefined") {
-		var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true});
+		var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,rpc:global.rpcprovider});
 		node.mpset(tkn).then(function(mpset) {		
 						var mps=[];
 				
@@ -215,7 +215,7 @@ function cmd_set(args, callback,tkn) {
 
 
 function ensureCUToken(args,callback) {	
-	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true});	
+	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,rpc:global.rpcprovider});	
 	
 	node.roleLookup().then(function(rl) {
 			var tk="0x0000000000000000000000000000000000000000";			
@@ -238,7 +238,7 @@ function ensureCUToken(args,callback) {
 }
 
 function ensureToken(args,callback) {
-	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true});	
+	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,rpc:global.rpcprovider});	
 	node.roleLookup().then(function(rl) {
 			var tk="0x0000000000000000000000000000000000000000";			
 			rl.relations(node.wallet.address,43).then(function(tx) {			
@@ -259,7 +259,7 @@ function ensureToken(args,callback) {
 }
 
 function ensureSet(args,callback) {
-	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true});	
+	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,rpc:global.rpcprovider});	
 	node.roleLookup().then(function(rl) {
 			var tk="0x0000000000000000000000000000000000000000";			
 			rl.relations(node.wallet.address,44).then(function(tx) {			
@@ -282,7 +282,7 @@ function ensureSet(args,callback) {
 function cmd_store(args, callback) {	
 	ensureAllowedTx(args.meter_point_id).then(function(d) { 
 		if(args.reading==null) {
-			var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true});	
+			var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,rpc:global.rpcprovider});	
 			var token=node.storage.getItemSync("dgy_token");
 			if(token==null) { 
 					vorpal.log("ERROR: If no reading is specified a valid Discovergy API login needs to be available. HINT: Use discovergy to login");
@@ -305,7 +305,7 @@ function cmd_store(args, callback) {
 			});
 			return;
 		}
-		var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true});	
+		var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,rpc:global.rpcprovider});	
 		node.storage.setItemSync(node.wallet.address,args.meter_point_id);
 		node.mpr().then( function(mpo) {
 				global.settlement={};
@@ -381,7 +381,7 @@ function cmd_store(args, callback) {
 									settlement.base=(settlement.end.power.toString()*1-settlement.start.power.toString()*1);
 									
 									//Added to ensure PK is not required for settlement
-									var node = new StromDAOBO.Node({external_id:"stromdao-mp",testMode:true});	  	
+									var node = new StromDAOBO.Node({external_id:"stromdao-mp",testMode:true,rpc:global.rpcprovider});	  	
 									var script = new vm.Script(settlement_js);
 									var result=script.runInThisContext();	
 									if(typeof global.promise!="undefined") { 
@@ -436,7 +436,7 @@ vorpal
 
 function cmd_retrieve(args, callback) {	 
 	ensureAllowedTx(args.meter_point_id).then(function(d) {
-		var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true});	
+		var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,rpc:global.rpcprovider});	
 		node.storage.setItemSync(node.wallet.address,args.meter_point_id);
 		node.mpr().then( function(mpo) {
 				mpo.readings(node.wallet.address).then( function(tx_result) {								
@@ -574,7 +574,7 @@ function delegates_balancing(args,callback,sko,node) {
 
 
 function ensure_balancing(args,callback,callback2) {
-	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true});	  
+	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,rpc:global.rpcprovider});	  
 	node.roleLookup().then(function(rl) {
 			rl.relations(node.wallet.address,42).then(function(tx) {				
 				if(typeof args.options.b != "undefined") {
@@ -616,7 +616,7 @@ vorpal
 	var node={};
 	if(typeof args.options.import != "undefined") {
 		console.log(args.options.import);
-		node = new StromDAOBO.Node({external_id:args.meter_point_id,privateKey:args.options.import.substr(3),testMode:true});	
+		node = new StromDAOBO.Node({external_id:args.meter_point_id,privateKey:args.options.import.substr(3),testMode:true,rpc:global.rpcprovider});	
 	} else {
 		node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true});	
 	}
@@ -643,9 +643,9 @@ vorpal
   .command('credit <meter_point_id> <amount>')    
   .description("Add credit to Meter Point ledger.") 
   .action(function (args, callback) {	 
-	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true});	
+	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,rpc:global.rpcprovider});	
 	var creditor=node.wallet.address;
-	var node = new StromDAOBO.Node({external_id:"stromdao-mp",testMode:true});	  
+	var node = new StromDAOBO.Node({external_id:"stromdao-mp",testMode:true,rpc:global.rpcprovider});	  
 	node.storage.setItemSync(creditor,args.meter_point_id);	
 	node.stromkontoproxy(smart_contract_stromkonto).then(function(sko) {				
 		sko.addTx(global.blk_address,creditor,Math.abs(args.amount),0).then(function(tx) {
@@ -694,7 +694,7 @@ vorpal
   .command('ledger <meter_point_id>')    
   .description("Retrieve Ledger Information for meter point id (Stromkonto).") 
   .action(function (args, callback) {	 
-	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true});	
+	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,rpc:global.rpcprovider});	
 	node.storage.setItemSync(node.wallet.address,args.meter_point_id);	
 	node.stromkonto(smart_contract_stromkonto).then( function(sko) {
 		vorpal.log("Address:",node.wallet.address);
@@ -784,7 +784,7 @@ vorpal
   .action(function (args, callback) {
 		var pks="";
 		
-		var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true});	
+		var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,rpc:global.rpcprovider});	
 		sc=smart_contract_stromkonto;
 		node.roleLookup().then(function(rl) {
 			rl.relations(node.wallet.address,42).then(function(tx) {
@@ -816,7 +816,7 @@ vorpal
   .option('-p --password <pass>', 'Password for Discovergy API')
   .description("Links Meter Point to Discovergy Smart Meter Gateway (API)")    
   .action(function (args, callback) {		  
-		var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true});	
+		var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,rpc:global.rpcprovider});	
 		var Discovergy = require("stromdao-bo-discovergy");		
 		var oauth_name="dgy_oauth_"+Math.random();
 		
@@ -831,7 +831,7 @@ vorpal
   .command('infrastructure <infrastructure_node> <meter_point>')
   .description("Assigns Infrastructure Node to Meter Point (Role 10)")    
   .action(function (args, callback) {		  
-		var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true});	
+		var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,rpc:global.rpcprovider});	
 		node.roleLookup().then(function(rl) {
 			rl.setRelation(10,args.infrastructure_node).then(function(x) {		
 				vorpal.log(x);
@@ -858,7 +858,7 @@ vorpal
 						account_obj.encrypt(node.wallet.privateKey).then(function(enc) {
 							node.stringstoragefactory().then(function(ssf)  {						
 								ssf.build(enc).then(function(ss) {
-									var node = new StromDAOBO.Node({external_id:args.options.username,privateKey:wallet.privateKey,testMode:true});	
+									var node = new StromDAOBO.Node({external_id:args.options.username,privateKey:wallet.privateKey,testMode:true,rpc:global.rpcprovider});	
 									node.roleLookup().then(function(rl) {
 											rl.setRelation(222,ss).then(function(tx) {
 												vorpal.log("Webuser created",tx);									
@@ -920,7 +920,7 @@ vorpal
   .command('list')  
   .description("List of managed meter points")    
   .action(function (args, callback) {		  	
-		var node = new StromDAOBO.Node({external_id:"stromdao-mp",testMode:true});	  
+		var node = new StromDAOBO.Node({external_id:"stromdao-mp",testMode:true,rpc:global.rpcprovider});	  
 		var managed_meters= node.storage.getItemSync("managed_meters");
 		vorpal.log(JSON.parse(managed_meters));
 		callback();
@@ -1009,15 +1009,19 @@ vorpal
 if(typeof process.env.smart_contract_stromkonto !="undefined") {	
 		global.smart_contract_stromkonto=process.env.smart_contract_stromkonto;
 }
-
+if(typeof process.env.rpcprovider !="undefined") {	
+		global.rpcprovider=process.env.rpcprovider;
+} else {
+		global.rpcprovider="https://fury.network/rpc";
+}
 // Ensure node has SC
 
 function ensureNodeWallet() {	
 	var p1 = new Promise(function(resolve, reject) {
 		if(typeof process.env.privateKey !="undefined") {				
-			var node = new StromDAOBO.Node({external_id:"stromdao-mp",privateKey:process.env.privateKey,testMode:true});	  
+			var node = new StromDAOBO.Node({external_id:"stromdao-mp",rpc:global.rpcprovider,privateKey:process.env.privateKey,testMode:true,rpc:global.rpcprovider});	  
 		} else {
-			var node = new StromDAOBO.Node({external_id:"stromdao-mp",testMode:true});	  
+			var node = new StromDAOBO.Node({external_id:"stromdao-mp",rpc:global.rpcprovider,testMode:true});	  
 		}
 			vorpal.log("Initializing node:",node.wallet.address);
 			global.blk_address=node.wallet.address;
