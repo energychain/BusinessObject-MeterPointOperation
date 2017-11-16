@@ -442,7 +442,9 @@ function cmd_retrieve(args, callback) {
 				mpo.readings(node.wallet.address).then( function(tx_result) {								
 					vorpal.log("Time:",new Date(tx_result.time.toString()*1000).toLocaleString());
 					vorpal.log("Reading:",tx_result.power.toString());
-					callback();									
+					tx_result.power = tx_result.power.toString();
+					tx_result.time=tx_result.time.toString();
+					callback(tx_result);									
 				});			
 		});	
 	});
@@ -612,6 +614,7 @@ vorpal
   .description("Get Address an keys for given external Meter Point ID.") 
   .option('--import <privateKey>','Import private Key as Meter Point. Add PKI infront of key!')
   .option('--name <SpeakingName>','Set a Name associated with BC address')
+  .option('--pk','Prints Private Key of given account')
   .action(function (args, callback) {	 
 	var node={};
 	if(typeof args.options.import != "undefined") {
@@ -628,12 +631,18 @@ vorpal
 						callback();
 				})
 		});
-	} else {
+	} else 
+	if(typeof args.options.pk != "undefined") {
+		node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true});	
+		vorpal.log(node.wallet.privateKey);
+		callback();
+	} else
+	{
 		vorpal.log("MPID",args.meter_point_id);
 		vorpal.log("Address",node.wallet.address);
 		vorpal.log("Node",node.nodeWallet.address);
 		vorpal.log("BLK",global.blk_address);
-		vorpal.log("Private Key","PKI"+node.wallet.privateKey);
+		vorpal.log("Private Key","PKI",node.wallet.privateKey);
 		vorpal.log("RSA Public Key",node.RSAPublicKey);
 		vorpal.log("RSA Private Key",node.RSAPrivateKey);
 		callback();
@@ -971,12 +980,32 @@ vorpal
 				args.meter_point_id=request.query.meter_point_id;				
 				args.options=request.query;
 				
-				return cmd_retrieve(args,function() {reply("transmitted");});
+				return cmd_retrieve(args,function(tx) {reply(JSON.stringify(tx));});
 			}		 
 		}
 	});	
-
-
+	server.route({
+		method: 'GET',
+		path:'/list/', 
+		handler: function (request, reply) {									
+				var node = new StromDAOBO.Node({external_id:"stromdao-mp",testMode:true,rpc:global.rpcprovider});	  
+				var managed_meters= node.storage.getItemSync("managed_meters");				
+				return reply(managed_meters);
+			}		 		
+	});	
+	server.route({
+		method: 'GET',
+		path:'/account/', 
+		handler: function (request, reply) {									
+			if(typeof request.query.meter_point_id == "undefined") {
+					res.err="Missing GET parameter: meter_point_id";
+					return reply(res);
+			} else {
+				var node = new StromDAOBO.Node({external_id:request.query.meter_point_id,testMode:true,rpc:global.rpcprovider});	  				
+				return reply(JSON.stringify(""+node.wallet.address));
+			}
+		}	 		
+	});	
 	server.register(require('inert'), (err) => {
 
 		if (err) {

@@ -1,6 +1,6 @@
 {
   "name": "stromdao-bo-mpo",
-  "version": "0.2.30",
+  "version": "0.2.31",
   "engines": {
     "node": ">=7.6.0",
     "npm": ">=4.5.0"
