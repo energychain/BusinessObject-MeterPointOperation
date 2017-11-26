@@ -12,6 +12,10 @@ Verwaltung und Schreiben von Daten einer Messstelle (=Stromzähler) in der Strom
 npm install -g stromdao-bo-mpo
 ```
 
+### Raspberry PI Installation
+Maybe it is the same for other installations, but the required node-gyp fails to build from npm. Workarround create the folders manually as shown in endless repeating error message.
+
+
 ## Verwendung
 ```
 stromdao-mp store meter_point_id value

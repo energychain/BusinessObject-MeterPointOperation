@@ -865,59 +865,68 @@ vorpal
 				rl.setRelation(41,global.smart_contract_stromkonto).then(function(x) {									
 				account_obj.wallet().then(function(wallet) {
 						account_obj.encrypt(node.wallet.privateKey).then(function(enc) {
-							node.stringstoragefactory().then(function(ssf)  {						
-								ssf.build(enc).then(function(ss) {
-									var node = new StromDAOBO.Node({external_id:args.options.username,privateKey:wallet.privateKey,testMode:true,rpc:global.rpcprovider});	
-									node.roleLookup().then(function(rl) {
-											rl.setRelation(222,ss).then(function(tx) {
-												vorpal.log("Webuser created",tx);									
-												// Dump Profile
-												if(typeof args.options.file != "undefined") {
-														
-															var storage = require("node-persist");
-															var fs = require("fs");
-															storage.initSync();
-															values=storage.keys();
-															var tmp = {};
-															
-															for (var k in values){
-																if (values.hasOwnProperty(k)) {			
-																	if(values[k].substr(0,"address_".length)=="address_") {				
-																		tmp[""+values[k].toLowerCase()]=storage.getItemSync(""+values[k]);																	
-																	}
-																	if(values[k].substr(0,"name_".length)=="name_") {				
-																		tmp[""+values[k].toLowerCase()]=storage.getItemSync(""+values[k]);																	
-																	}
-																}
-															}	
-															fs.writeFile(args.options.file, JSON.stringify(tmp), 'utf8', function() {
-																vorpal.log("Profile File written");
-																callback(); 
-																});	
-												} else 
-												if(typeof args.options.ui != "undefined") {								
-													//var ui_profile=fs.readFileSync(arg.options.ui);
-													account_obj.encrypt(args.options.ui).then(function(enc_profile) {
-															// IPFS Wrapper here
-															node.stringstoragefactory().then(function(ssf)  {						
-																ssf.build(enc_profile).then(function(ss) {
-																	node.roleLookup().then(function(rl) {
-																		rl.setRelation(11,ss).then(function(tx) {
-																			vorpal.log("UI Profile set");
-																			callback();
+							account_obj.encrypt(node.RSAPrivateKey).then(function(enc_rsa) {
+								node.stringstoragefactory().then(function(ssf)  {						
+									ssf.build(enc).then(function(ss) {
+										ssf.build(enc_rsa).then(function(ss_rsa) {
+											ssf.build(node.RSAPublicKey).then(function(ss_pub) {
+											var node = new StromDAOBO.Node({external_id:args.options.username,privateKey:wallet.privateKey,testMode:true,rpc:global.rpcprovider});	
+											node.roleLookup().then(function(rl) {
+												rl.setRelation(224,ss_pub).then(function(tx) {
+												rl.setRelation(223,ss_rsa).then(function(tx) {
+														rl.setRelation(222,ss).then(function(tx) {
+																	vorpal.log("Webuser created",tx);									
+																	// Dump Profile
+																	if(typeof args.options.file != "undefined") {
+																				var storage = require("node-persist");
+																				var fs = require("fs");
+																				storage.initSync();
+																				values=storage.keys();
+																				var tmp = {};
+																				
+																				for (var k in values){
+																					if (values.hasOwnProperty(k)) {			
+																						if(values[k].substr(0,"address_".length)=="address_") {				
+																							tmp[""+values[k].toLowerCase()]=storage.getItemSync(""+values[k]);																	
+																						}
+																						if(values[k].substr(0,"name_".length)=="name_") {				
+																							tmp[""+values[k].toLowerCase()]=storage.getItemSync(""+values[k]);																	
+																						}
+																					}
+																				}	
+																				fs.writeFile(args.options.file, JSON.stringify(tmp), 'utf8', function() {
+																					vorpal.log("Profile File written");
+																					callback(); 
+																					});	
+																	} else 
+																	if(typeof args.options.ui != "undefined") {								
+																		//var ui_profile=fs.readFileSync(arg.options.ui);
+																		account_obj.encrypt(args.options.ui).then(function(enc_profile) {
+																				// IPFS Wrapper here
+																				node.stringstoragefactory().then(function(ssf)  {						
+																					ssf.build(enc_profile).then(function(ss) {
+																						node.roleLookup().then(function(rl) {
+																							rl.setRelation(11,ss).then(function(tx) {
+																								vorpal.log("UI Profile set");
+																								callback();
+																							});
+																						});
+																					});
+																				});
 																		});
-																	});
-																});
-															});
+																		
+																	} else {
+																		callback();	
+																	}
+														});
 													});
-													
-												} else {
-													callback();	
-												}
+												});
 											});
+										});
+										});
 									});
-								});
-							});							
+								});							
+							});
 						});
 					});	
 				});	

@@ -1,1 +1,3 @@
-console.log(settlement);
+console.log("Node",node.wallet.address);
+console.log("Settlement",settlement);
+
