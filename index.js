@@ -284,6 +284,7 @@ function cmd_store(args, callback) {
 		if(args.reading==null) {
 			var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,rpc:global.rpcprovider});	
 			var token=node.storage.getItemSync("dgy_token");
+			var alias=node.storage.getItemSync("dgy_alias");
 			if(token==null) { 
 					vorpal.log("ERROR: If no reading is specified a valid Discovergy API login needs to be available. HINT: Use discovergy to login");
 					callback();
@@ -291,7 +292,7 @@ function cmd_store(args, callback) {
 			}			
 			var Discovergy = require("stromdao-bo-discovergy");		
 			var dgy = new Discovergy("dgy_token",node);	
-			dgy.getMeterReading(args.meter_point_id, function(o) {	
+			dgy.getMeterReading(alias, function(o) {	
 						var values = o.values;
 						if(typeof values !="undefined") {
 							var energy = ""+values.energy+"";
@@ -823,6 +824,7 @@ vorpal
   .command('discovergy <meter_point_id>')
   .option('-u --username <user>', 'Username for Discovergy API')    
   .option('-p --password <pass>', 'Password for Discovergy API')
+  .option('-a <alias>','Meterpoint ID / Alias at Discovergy')
   .description("Links Meter Point to Discovergy Smart Meter Gateway (API)")    
   .action(function (args, callback) {		  
 		var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,rpc:global.rpcprovider});	
@@ -833,6 +835,11 @@ vorpal
 		
 		dgy.CreateAuth(node,args.options.username,args.options.password).then(function(token) {				
 			node.storage.setItemSync("dgy_token",token);
+			if(typeof args.options.alias != "undefined") {
+					node.storage.setItemSync("dgy_alias",args.options.alias);
+				} else {
+					node.storage.setItemSync("dgy_alias",args.meter_point_id);
+			}
 			callback();  
 		});
 	});    
