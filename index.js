@@ -38,21 +38,26 @@ function ensureAllowedTx(extid) {
 		
 		var node = new StromDAOBO.Node({external_id:"stromdao-mp",testMode:true,rpc:global.rpcprovider});	  
 		var managed_meters= node.storage.getItemSync("managed_meters");
-		
+		try
+		{
 		if(managed_meters==null) managed_meters=[]; else managed_meters=JSON.parse(managed_meters);
 		
 		if(node.storage.getItemSync("managed_"+extid)==null) {
 				managed_meters.push(extid);
 				node.storage.setItemSync("managed_meters",JSON.stringify(managed_meters));	
 				node.storage.setItemSync("managed_"+extid,sender);	
-				node.stromkontoproxy().then(function(skop) {
+				node.stromkontoproxy(global.smart_contract_stromkonto).then(function(skop) {
 						skop.modifySender(sender,true).then(function(tx) {
 								vorpal.log("Mandated ",extid,tx);	
 								resolve("mandated");						
 						});
-				});			
+				}).catch(function(e) {vorpal.log("not mandated");resolve("-");});			
+
 		} else {
 			resolve("mandated");	
+		}
+		} catch(e) {
+				resolve("-");
 		}
 	});
 	return p1;
@@ -280,7 +285,7 @@ function ensureSet(args,callback) {
 }
 
 function cmd_store(args, callback) {	
-	ensureAllowedTx(args.meter_point_id).then(function(d) { 
+	ensureAllowedTx(args.meter_point_id).then(function(d) { 	
 		if(args.reading==null) {
 			var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,rpc:global.rpcprovider});	
 			var token=node.storage.getItemSync("dgy_token");
@@ -418,7 +423,7 @@ function cmd_store(args, callback) {
 					
 				});
 		});
-	});	
+	}).catch(function(e) { vorpal.log("Retry"); cmd_store(args, callback);});	
 }	
 
 
@@ -686,43 +691,7 @@ vorpal
 	fs.writeFile(args.filename, JSON.stringify(tmp), 'utf8', function() {callback(); });		
 });	
 
-vorpal
-  .command('ledger <meter_point_id>')    
-  .description("Retrieve Ledger Information for meter point id (Stromkonto).") 
-  .action(function (args, callback) {	 
-	var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,rpc:global.rpcprovider});	
-	node.storage.setItemSync(node.wallet.address,args.meter_point_id);	
-	node.stromkonto(smart_contract_stromkonto).then( function(sko) {
-		vorpal.log("Address:",node.wallet.address);
-		sko.balancesSoll(node.wallet.address).then(function(soll) {
-			vorpal.log("Credit:",soll);
-			sko.balancesHaben(node.wallet.address).then(function(haben) {
-				vorpal.log("Debit:",haben);
-				vorpal.log("Balance:",haben-soll);		
-				sko.baseHaben(node.wallet.address).then(function(base_haben) {
-					vorpal.log("Energy Debit:",base_haben);		
-					sko.baseSoll(node.wallet.address).then(function(base_soll) {
-						vorpal.log("Energy Credit:",base_soll);			
-						sko.history(node.wallet.address,10000).then(function(history) {
-							vorpal.log("Last Transaction");
-							vorpal.log("Block","From","To","Value");						
-							for(var i=0;i<history.length;i++) {
-									var from=node.storage.getItemSync(history[i].from);
-									if(from===null) {from=history[i].from;}
-									
-									var to=node.storage.getItemSync(history[i].to);
-									if(to===null) {to=history[i].from;}
-									
-									vorpal.log(history[i].blockNumber,from,to,parseInt(history[i].value, 16));							
-							}
-							callback();	
-						});
-					});
-				});
-			});
-		});
-	});	
-});	
+
 vorpal
   .command('balancing <meter_point_id>')    
   .description("(Sub) Balance Group")
