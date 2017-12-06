@@ -425,7 +425,7 @@ function cmd_store(args, callback) {
 					
 				});
 		});
-	}).catch(function(e) { vorpal.log("Retry"); cmd_store(args, callback);});	
+	}).catch(function(e) { vorpal.log("Retry",e); cmd_store(args, callback);});	
 }	
 
 
