@@ -311,7 +311,7 @@ function cmd_store(args, callback) {
 			});
 			return;
 		} else {
-		args.reading=Math.round(reading);	
+		args.reading=Math.round(args.reading);	
 		}
 		var node = new StromDAOBO.Node({external_id:args.meter_point_id,testMode:true,rpc:global.rpcprovider});	
 		node.storage.setItemSync(node.wallet.address,args.meter_point_id);
