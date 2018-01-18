@@ -31,6 +31,9 @@ require('dotenv').config();
  
 var StromDAOBO = require("stromdao-businessobject");    
 
+function errorHandler(error) {
+	console.log("Error",error);	
+}
 function ensureAllowedTx(extid) {	
 	var p1 = new Promise(function(resolve, reject) {
 		var node = new StromDAOBO.Node({external_id:extid,testMode:true,rpc:global.rpcprovider});
@@ -605,7 +608,7 @@ function ensure_balancing(args,callback,callback2) {
 					}		
 				}		
 			});
-		});		
+		}).catch(errorHandler);		
 }
 
 function cmd_balancing(args, callback) {
